@@ -764,6 +764,7 @@
     <span class="login-user-badge" id="loginUserBadge"></span>
     <button class="logout-btn" id="logoutBtn" style="display:none;">로그아웃</button>
     <div class="status" id="fileStatus">불러온 파일 없음</div>
+    <button class="load-btn secondary" id="backupExportBtn" title="지금 클라우드에 있는 전체 데이터를 엑셀 파일로 내려받습니다">💾 전체 데이터 백업(엑셀)</button>
     <button class="load-btn" id="loadBtn">엑셀 파일 열기</button>
     <input type="file" id="fileInput" accept=".xlsx,.xls">
   </div>
@@ -1571,7 +1572,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   const fmtWon = (n) => (Math.round(n||0)).toLocaleString('ko-KR');
 
   const els = {};
-  ['fileInput','loadBtn','emptyLoadBtn','emptyState','dashboardContent','fileStatus','tabBar',
+  ['fileInput','loadBtn','emptyLoadBtn','emptyState','dashboardContent','fileStatus','tabBar','backupExportBtn',
    'menuKpiGrid','recipeCountLabel','recipeSearch','recipeCatFilter','recipeList','recipeAddBtn',
    'recipeImportBtn','recipeImportStatus',
    'changeLogCount','changeLogTable','calendarSheetSelect','calGrid',
@@ -1865,6 +1866,96 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       return {ok:false, mode:'download', error: err.message};
     }
   }
+
+  // 데이터가 이제 전부 Firestore(클라우드)에 있어서 "PC에 저장된 파일"이 따로 없다 —
+  // 대신 지금 화면에 실시간으로 떠 있는 전체 데이터를 새 엑셀 파일로 만들어 바로
+  // 다운로드해주는 백업 기능. 매 도메인의 onSnapshot이 채워둔 DATA/FIN을 그대로 읽으며,
+  // 이 파일은 사람이 읽기 위한 백업용이라 각 "가져오기" 버튼의 원본 시트 형식과
+  // 완전히 같을 필요는 없다(다시 이 대시보드로 가져올 때도 같은 이름의 헤더면 문제없이 읽힌다).
+  function buildBackupWorkbook(){
+    const wb = XLSX.utils.book_new();
+    const addSheet = (name, headers, rows) => {
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      XLSX.utils.book_append_sheet(wb, ws, String(name).slice(0,31));
+    };
+
+    addSheet('공과금', ['날짜','항목','금액','비고'],
+      (DATA.utilityLog||[]).map(r=>[r.date, r.category, r.amount, r.note]));
+
+    addSheet('매출', ['날짜','매장상품권','매장카드','매장현금','배달카드','배달계좌이체','도시락카드','도시락계좌이체','케이터링카드','케이터링계좌이체'],
+      (FIN.salesDetailRows||[]).map(r=>[r.date, r.storeGood, r.storeCard, r.storeCash, r.deliverCard, r.deliverTransfer, r.lunchboxCard, r.lunchboxTransfer, r.cateringCard, r.cateringTransfer]));
+
+    addSheet('급여', ['귀속월','직원명','직급','기본급','국민연금','건강보험','장기요양보험','고용보험','산재보험','공제합계','실지급액','비고'],
+      (DATA.payrollLog||[]).map(r=>[r.month, r.name, r.role, r.baseSalary, r.pension, r.health, r.longTermCare, r.employment, r.industrial, r.totalDeduction, r.netPay, r.note]));
+
+    addSheet('식자재및물품구입', ['날짜','분류','품목','거래처','단가','수량','금액'],
+      (FIN.detailRows||[]).map(r=>[r.date, r.category, r.rawItem, r.vendor, r.price, r.qty, r.amount]));
+
+    addSheet('거래처', ['업체명','담당자명','연락처','이메일','주소','비고'],
+      (DATA.vendors||[]).map(v=>[v.name, v.contact, v.phone, v.email, v.address, v.note]));
+
+    const ci = DATA.companyInfo || {};
+    addSheet('회사정보', ['상호','대표자','사업자등록번호','소재지','업태','종목','연락처','팩스','이메일','입금계좌'],
+      [[ci.name, ci.ceo, ci.regNo, ci.address, ci.bizType, ci.bizItem, ci.phone, ci.fax, ci.email, ci.account]]);
+
+    addSheet('재고_품목마스터', ['품목명','분류','보관위치','기본단위','비고'],
+      (DATA.inventoryItems||[]).map(i=>[i.name, i.category, i.location, i.unit, i.note]));
+
+    addSheet('재고_입출고기록', ['날짜','구분','품목명','분류','보관위치','수량','단위','비고'],
+      (DATA.inventoryLog||[]).map(x=>[x.date, x.type, x.name, x.category, x.location, x.qty, x.unit, x.note]));
+
+    addSheet('도시락_케이터링_납품기록', ['납품일자','구분','업체명','담당자명','연락처','인원수','납품메뉴','단가','총금액','비고'],
+      (DATA.cateringLog||[]).map(r=>[r.date, r.type, r.vendor, r.contact, r.phone, r.count, r.menu, r.unitPrice, r.total, r.note]));
+
+    addSheet('예약_재료체크', ['예약일','거래처','유형','품목명','필요수량','단위','구매완료','사용수량','비고'],
+      (DATA.reservationIngredients||[]).map(x=>[x.date, x.vendor, x.type, x.name, x.needQty, x.unit, x.bought?'완료':'', x.usedQty==null?'':x.usedQty, x.note]));
+
+    addSheet('레시피', ['메뉴명','분류','1인분량','주재료','양념','조리순서','팁','비고'],
+      (DATA.recipes||[]).map(r=>[r.name, r.category, r.portion, r.mainIngredients, r.seasoning, r.steps, r.tips, r.note]));
+
+    (DATA.calendarSheets||[]).forEach(sheet=>{
+      const colLabels = sheet.cols.map(c => String(c.header).replace(CIRCLED,'').trim());
+      const headers = ['날짜','요일', ...colLabels];
+      const rows = sheet.rows.map(r=>{
+        const row = [r.dateObj, r.weekday];
+        colLabels.forEach(label=>{
+          const item = r.items.find(it=>it.label===label);
+          row.push(item ? item.value : '');
+        });
+        return row;
+      });
+      addSheet(sheet.name, headers, rows);
+    });
+
+    const ptRows = [];
+    (DATA.priceTierMenus||[]).forEach(b=>{
+      b.items.forEach(it=>{
+        ptRows.push([b.priceLabel, b.version, b.mainLabel, b.descLabel, it.isDivider ? '(구역제목)' : it.category, it.name, it.desc]);
+      });
+    });
+    addSheet('가격별_운반급식메뉴', ['가격','버전','메인메뉴','설명','구분','메뉴명','상세설명'], ptRows);
+
+    return wb;
+  }
+  function downloadBackupExcel(){
+    if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+    try{
+      const wb = buildBackupWorkbook();
+      const now = new Date();
+      const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+      const wbout = XLSX.write(wb, {type:'array', bookType:'xlsx'});
+      const blob = new Blob([wbout], {type:'application/octet-stream'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `수목푸드_데이터백업_${stamp}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+      toast('✓ 백업 파일이 다운로드되었습니다.');
+    }catch(err){
+      toast('백업 실패: ' + (err.message || err), true);
+    }
+  }
+  if(els.backupExportBtn) els.backupExportBtn.addEventListener('click', downloadBackupExcel);
 
   function reportSaveResult(result, successMsg){
     if(result.ok && result.mode === 'direct'){
