@@ -3510,7 +3510,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       els.invStockWrap.innerHTML = '<p style="color:var(--muted); font-size:13px; padding:10px 0;">아직 입출고 기록이 없습니다.</p>';
       return;
     }
-    let html = '<table class="change-log-table"><thead><tr><th>품목명</th><th>분류</th><th>보관위치</th><th>현재 재고</th></tr></thead><tbody>';
+    let html = '<table class="change-log-table"><thead><tr><th>품목명</th><th>분류</th><th>보관위치</th><th>현재 재고</th><th></th></tr></thead><tbody>';
     names.forEach(name=>{
       const s = stock[name];
       const zero = s.qty <= 0;
@@ -3519,10 +3519,73 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <td><span class="cat-pill">${escapeHtml(s.category)}</span></td>
         <td>${s.location && s.location!=='-' ? `<span class="loc-pill">${escapeHtml(s.location)}</span>` : '-'}</td>
         <td><span class="stock-qty ${zero?'zero':''}">${s.qty.toLocaleString('ko-KR')} ${escapeHtml(s.unit)}</span></td>
+        <td><button class="load-btn secondary inv-adjust-btn" data-name="${escapeAttrVal(name)}" style="font-size:11px; padding:4px 10px;">실제 수량으로 수정</button></td>
       </tr>`;
     });
     html += '</tbody>';
     els.invStockWrap.innerHTML = html;
+    els.invStockWrap.querySelectorAll('.inv-adjust-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const name = btn.dataset.name;
+        if(stock[name]) openStockAdjustForm(name, stock[name]);
+      });
+    });
+  }
+
+  // 실사(직접 세어본) 수량으로 재고를 맞추는 기능. 매입에서 자동으로 들어온 입고 기록은
+  // 그대로 두고, "지금 실제로 남은 양"과 계산된 재고의 차이만큼 출고(사용됨) 또는
+  // 입고(누락분) 기록을 하나 새로 추가하는 방식이라 — 이전 입출고 내역은 안 건드리고
+  // 재고 숫자만 실제와 맞아떨어지게 된다.
+  function openStockAdjustForm(name, s){
+    els.modalBody.innerHTML = `
+      <h3>재고 수정 — ${escapeHtml(name)}</h3>
+      <div class="modal-cat">현재 계산된 재고: ${s.qty.toLocaleString('ko-KR')} ${escapeHtml(s.unit)}</div>
+      <div class="modal-field">
+        <div class="mf-label">지금 실제로 남은 양 *</div>
+        <input type="number" step="0.1" class="day-edit-input" id="stockAdjustQty" value="${s.qty}" placeholder="예: 2.5">
+      </div>
+      ${recipeFormField('stockAdjustNote', '비고 (선택)', '', {placeholder:'예: 폐기, 재고 확인, 사용 완료 등'})}
+      <div class="modal-form-actions">
+        <div class="save-status" id="stockAdjustStatus" style="flex:1;"></div>
+        <button class="load-btn secondary" id="stockAdjustCancelBtn">취소</button>
+        <button class="submit-btn confirm" id="stockAdjustSaveBtn">저장</button>
+      </div>
+    `;
+    els.recipeModal.classList.add('active');
+    document.getElementById('stockAdjustCancelBtn').addEventListener('click', ()=> els.recipeModal.classList.remove('active'));
+    document.getElementById('stockAdjustSaveBtn').addEventListener('click', ()=> submitStockAdjustForm(name, s));
+  }
+
+  async function submitStockAdjustForm(name, s){
+    const statusEl = document.getElementById('stockAdjustStatus');
+    const actualQty = Number(document.getElementById('stockAdjustQty').value);
+    if(isNaN(actualQty) || actualQty < 0){
+      statusEl.textContent = '⚠ 실제 수량을 올바르게 입력해 주세요.';
+      statusEl.style.color = 'var(--stamp)';
+      return;
+    }
+    if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+    const note = document.getElementById('stockAdjustNote').value.trim() || '재고 실사 조정';
+    const diff = Math.round((actualQty - s.qty) * 100) / 100;
+    if(diff === 0){
+      els.recipeModal.classList.remove('active');
+      return;
+    }
+    statusEl.textContent = '저장 중...';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      await window.SumokFB.addDoc(invLogCollRef(), {
+        date: window.SumokFB.Timestamp.fromDate(new Date()),
+        type: diff < 0 ? '출고' : '입고',
+        name, category: s.category, location: s.location,
+        qty: Math.abs(diff), unit: s.unit, note,
+      });
+      els.recipeModal.classList.remove('active');
+      toast(`✓ 재고가 ${actualQty.toLocaleString('ko-KR')} ${s.unit}(으)로 조정되었습니다.`);
+    }catch(err){
+      statusEl.textContent = '✗ 저장 실패: ' + (err.message || err.code || '');
+      statusEl.style.color = 'var(--stamp)';
+    }
   }
 
   function renderInventoryLog(){
