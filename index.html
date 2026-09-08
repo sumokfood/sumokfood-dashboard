@@ -886,7 +886,7 @@
           <div class="chart-wrap donut-wrap">
             <canvas id="chartChannel"></canvas>
             <div class="donut-center" id="donutCenter">
-              <div class="dc-label">이번달 매출</div>
+              <div class="dc-label" id="donutCenterLabel">이번달 매출</div>
               <div class="dc-value" id="donutCenterValue">0원</div>
             </div>
           </div>
@@ -1603,7 +1603,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'invTxDate','invTxType','invTxItem','invTxQty','invTxUnit','invTxNote','invTxSubmit','invTxStatus',
    'invStockWrap','invLogWrap','invLogImportBtn','invLogImportStatus',
    // financial dashboard ids
-   'finKpiGrid','periodLabel','periodLabel2','donutCenterValue','kpiMonthSelect','kpiViewToggleBtn',
+   'finKpiGrid','periodLabel','periodLabel2','donutCenterValue','donutCenterLabel','kpiMonthSelect','kpiViewToggleBtn',
    'pasteArea','pasteClearBtn','pastePreviewBtn','pasteConfirmBtn','pastePreviewWrap','previewTable',
    'purchaseImportBtn','purchaseImportStatus',
    'purchaseDetailTable','purchaseDetailSearch','purchaseDetailCount',
@@ -4915,7 +4915,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.kpiMonthSelect.value = (cur && months.includes(cur)) ? cur : months[months.length-1];
   }
   if(els.kpiMonthSelect){
-    els.kpiMonthSelect.addEventListener('change', ()=> renderKpiCards(els.kpiMonthSelect.value));
+    els.kpiMonthSelect.addEventListener('change', ()=>{
+      renderKpiCards(els.kpiMonthSelect.value);
+      renderChannelFlowCharts(els.kpiMonthSelect.value);
+    });
   }
   if(els.kpiViewToggleBtn){
     els.kpiViewToggleBtn.addEventListener('click', ()=>{
@@ -4958,6 +4961,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if(els.periodLabel) els.periodLabel.textContent = mk ? ('기준월: ' + mLabel) : '';
     if(els.periodLabel2) els.periodLabel2.textContent = mk ? ('기준월: ' + mLabel) : '';
     if(els.donutCenterValue) els.donutCenterValue.textContent = fmtWon(curSales) + '원';
+    if(els.donutCenterLabel) els.donutCenterLabel.textContent = mLabel + ' 매출';
 
     const briefKpis = [
       {label:mLabel + ' 매출액', value:fmtWon(curSales), unit:'원', cls:'accent', mom: kpiMomHtml(mk, salesOf)},
@@ -5155,13 +5159,22 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       datasets: [{label:'매입액', data: top10Vendor.map(x=>x[1]), backgroundColor: PALETTE[2]}]
     }, {legend:false, horizontal:true});
 
-    // 이 아래 두 차트는 사용자가 고른 달이 아니라 항상 최신월 기준으로 보여주던
-    // 기존 동작을 그대로 유지한다 (핵심 경영 지표 카드만 월 선택이 적용됨).
-    const curSalesObj = salesByMonth[latestMonth] || {storeGood:0, storeCard:0, storeCash:0, deliverTotal:0, lunchboxTotal:0, cateringTotal:0};
+    // 이 두 차트는 핵심 경영 지표 카드와 같은 "기준월"을 쓴다 — 월 선택을 바꾸면
+    // renderChannelFlowCharts가 다시 불려서 같이 갱신된다 (아래 kpiMonthSelect 리스너 참고).
+    renderChannelFlowCharts((els.kpiMonthSelect && els.kpiMonthSelect.value) || latestMonth);
+  }
+
+  // 매출 채널별 비중(도넛)·매입→매출→정산 흐름(막대) 두 차트를 선택된 기준월(mk)
+  // 기준으로 그린다. renderFinancialDashboard()의 최초 렌더와, kpiMonthSelect가
+  // 바뀔 때 둘 다에서 호출되어야 실제로 "월별로 반응"하게 된다.
+  function renderChannelFlowCharts(mk){
+    const salesByMonth = FIN.salesByMonth || {};
+    const byMonth = FIN.byMonth || {};
+    const curSalesObj = salesByMonth[mk] || {storeGood:0, storeCard:0, storeCash:0, deliverTotal:0, lunchboxTotal:0, cateringTotal:0};
     const curStoreSales = curSalesObj.storeGood + curSalesObj.storeCard + curSalesObj.storeCash;
     const curExtSales = curSalesObj.deliverTotal + curSalesObj.lunchboxTotal + curSalesObj.cateringTotal;
     const curSales = curStoreSales + curExtSales;
-    const curPurchase = byMonth[latestMonth] || 0;
+    const curPurchase = byMonth[mk] || 0;
     const commission = curSales * 0.06;
     const settlement = curSales - commission;
 
@@ -5177,7 +5190,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     renderChart('chartCompare', 'bar', {
       labels: ['매입액','매출액','정산액'],
       datasets: [{
-        label:latestMonth?monthLabel(latestMonth):'',
+        label:mk?monthLabel(mk):'',
         data:[curPurchase, curSales, settlement],
         backgroundColor: (ctx)=>{
           const g = ['#8F6B30','#C6A05F','#2E5540'];
