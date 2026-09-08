@@ -879,7 +879,10 @@
 
     <!-- ===================== 경영: 매출·정산 분석 ===================== -->
     <div class="tab-panel" id="tab-sales">
-      <div class="section-title"><h2>매출 · 정산 분석</h2><span class="sub" id="periodLabel2"></span></div>
+      <div class="section-title">
+        <h2>매출 · 정산 분석</h2><span class="sub" id="periodLabel2"></span>
+        <select id="salesMonthSelect"></select>
+      </div>
       <div class="sales-grid">
         <div class="chart-card hero-card">
           <h3>매출 채널별 비중</h3>
@@ -1603,7 +1606,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'invTxDate','invTxType','invTxItem','invTxQty','invTxUnit','invTxNote','invTxSubmit','invTxStatus',
    'invStockWrap','invLogWrap','invLogImportBtn','invLogImportStatus',
    // financial dashboard ids
-   'finKpiGrid','periodLabel','periodLabel2','donutCenterValue','donutCenterLabel','kpiMonthSelect','kpiViewToggleBtn',
+   'finKpiGrid','periodLabel','periodLabel2','donutCenterValue','donutCenterLabel','kpiMonthSelect','salesMonthSelect','kpiViewToggleBtn',
    'pasteArea','pasteClearBtn','pastePreviewBtn','pasteConfirmBtn','pastePreviewWrap','previewTable',
    'purchaseImportBtn','purchaseImportStatus',
    'purchaseDetailTable','purchaseDetailSearch','purchaseDetailCount',
@@ -4906,19 +4909,29 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   /* ---------------- 핵심 경영 지표: 월별 선택 + 자세히/간략히 보기 ---------------- */
   let kpiViewMode = 'detail'; // 'detail' | 'brief' — 기본은 지금까지처럼 전체 항목을 다 보여주는 자세히 모드
+  // 기준월 선택 드롭다운이 "핵심 경영 지표"·"매출·정산 분석" 두 탭에 하나씩 있다 —
+  // 둘 중 어느 쪽에서 바꿔도 같은 달을 가리키도록 항상 같이 채우고 같이 갱신한다.
   function populateKpiMonthSelect(){
-    if(!els.kpiMonthSelect) return;
     const months = FIN.allMonthKeys || [];
-    if(months.length === 0){ els.kpiMonthSelect.innerHTML = ''; return; }
-    const cur = els.kpiMonthSelect.value;
-    els.kpiMonthSelect.innerHTML = months.slice().reverse().map(mk=>`<option value="${mk}">${monthLabel(mk)}</option>`).join('');
-    els.kpiMonthSelect.value = (cur && months.includes(cur)) ? cur : months[months.length-1];
+    [els.kpiMonthSelect, els.salesMonthSelect].forEach(sel=>{
+      if(!sel) return;
+      if(months.length === 0){ sel.innerHTML = ''; return; }
+      const cur = sel.value;
+      sel.innerHTML = months.slice().reverse().map(mk=>`<option value="${mk}">${monthLabel(mk)}</option>`).join('');
+      sel.value = (cur && months.includes(cur)) ? cur : months[months.length-1];
+    });
+  }
+  function onKpiMonthChange(mk){
+    if(els.kpiMonthSelect) els.kpiMonthSelect.value = mk;
+    if(els.salesMonthSelect) els.salesMonthSelect.value = mk;
+    renderKpiCards(mk);
+    renderChannelFlowCharts(mk);
   }
   if(els.kpiMonthSelect){
-    els.kpiMonthSelect.addEventListener('change', ()=>{
-      renderKpiCards(els.kpiMonthSelect.value);
-      renderChannelFlowCharts(els.kpiMonthSelect.value);
-    });
+    els.kpiMonthSelect.addEventListener('change', ()=> onKpiMonthChange(els.kpiMonthSelect.value));
+  }
+  if(els.salesMonthSelect){
+    els.salesMonthSelect.addEventListener('change', ()=> onKpiMonthChange(els.salesMonthSelect.value));
   }
   if(els.kpiViewToggleBtn){
     els.kpiViewToggleBtn.addEventListener('click', ()=>{
@@ -5178,11 +5191,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const commission = curSales * 0.06;
     const settlement = curSales - commission;
 
+    // 네 채널이 한눈에 구분되도록, 나머지 차트들의 차분한 브랜드 팔레트 대신
+    // 이 도넛만 서로 색상 계열이 뚜렷이 다른 밝은 색을 쓴다 (요청: "밝은 색으로 구분").
+    const CHANNEL_COLORS = ['#F2A93B','#4A90D9','#EC6B4E','#8E6BC9'];
     renderChart('chartChannel', 'doughnut', {
       labels: ['매장식사','운반급식','도시락','케이터링'],
       datasets: [{
         data:[curStoreSales, curSalesObj.deliverTotal, curSalesObj.lunchboxTotal, curSalesObj.cateringTotal],
-        backgroundColor: [PALETTE[0], PALETTE[1], PALETTE[2], PALETTE[3]],
+        backgroundColor: CHANNEL_COLORS,
         borderColor: '#FFFDF8', borderWidth: 3, hoverOffset: 10
       }]
     }, {legend:true, percentLabels:true, cutout:'68%'});
@@ -5193,7 +5209,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         label:mk?monthLabel(mk):'',
         data:[curPurchase, curSales, settlement],
         backgroundColor: (ctx)=>{
-          const g = ['#8F6B30','#C6A05F','#2E5540'];
+          const g = ['#4A90D9','#F2A93B','#3FAE7A']; // 매입(파랑)·매출(주황)·정산(초록) — 밝고 뚜렷하게 구분
           return g[ctx.dataIndex] || PALETTE[0];
         },
         borderRadius: 10,
