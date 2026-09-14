@@ -157,11 +157,14 @@
     border:1px solid var(--line); border-radius:3px; padding:9px 10px; font-size:13.5px;
     font-family:inherit; background:#fff; color:var(--text);
   }
-  .menu-slots{display:flex; flex-direction:column; gap:7px;}
-  .menu-slot-row{display:grid; grid-template-columns:56px 1fr auto; gap:8px; align-items:center;}
-  .menu-slot-row .ms-label{font-size:12.5px; font-weight:700; color:var(--ink-2); text-align:right;}
-  .menu-slot-row input{width:100%;}
-  .menu-slot-row .ms-pick-btn{padding:8px 12px; font-size:12px; white-space:nowrap;}
+  .menu-slots{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px 10px;}
+  .menu-slot-row{display:grid; grid-template-columns:34px 1fr auto; gap:5px; align-items:center; min-width:0;}
+  .menu-slot-row .ms-label{font-size:11px; font-weight:700; color:var(--ink-2); text-align:right;}
+  .menu-slot-row input{width:100%; min-width:0; padding:6px 7px; font-size:12.5px;}
+  .menu-slot-row .ms-pick-btn{padding:5px 8px; font-size:11px; white-space:nowrap;}
+  @media (max-width: 620px){
+    .menu-slots{grid-template-columns:1fr;}
+  }
   .form-field input:focus, .form-field select:focus{border-color:var(--gold-2); outline:none;}
   .form-field .readout{
     font-family:'Consolas',monospace; font-weight:700; color:var(--gold-2); font-size:16px; padding:9px 0 2px;
