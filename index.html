@@ -157,6 +157,11 @@
     border:1px solid var(--line); border-radius:3px; padding:9px 10px; font-size:13.5px;
     font-family:inherit; background:#fff; color:var(--text);
   }
+  .menu-slots{display:flex; flex-direction:column; gap:7px;}
+  .menu-slot-row{display:grid; grid-template-columns:56px 1fr auto; gap:8px; align-items:center;}
+  .menu-slot-row .ms-label{font-size:12.5px; font-weight:700; color:var(--ink-2); text-align:right;}
+  .menu-slot-row input{width:100%;}
+  .menu-slot-row .ms-pick-btn{padding:8px 12px; font-size:12px; white-space:nowrap;}
   .form-field input:focus, .form-field select:focus{border-color:var(--gold-2); outline:none;}
   .form-field .readout{
     font-family:'Consolas',monospace; font-weight:700; color:var(--gold-2); font-size:16px; padding:9px 0 2px;
@@ -411,6 +416,16 @@
     display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:10px;
     background:rgba(31,59,44,0.1); color:var(--ink-2);
   }
+  .ms-group{margin-bottom:16px;}
+  .ms-group-title{font-size:12px; font-weight:700; color:var(--ink-2); margin-bottom:7px;}
+  .ms-dish-list{display:flex; flex-wrap:wrap; gap:6px;}
+  .ms-dish-btn{
+    border:1px solid var(--line); border-radius:100px; padding:6px 13px; font-size:12.5px;
+    background:#fff; color:var(--text); cursor:pointer; font-family:inherit; line-height:1.3;
+  }
+  .ms-dish-btn:hover{ background:var(--paper); border-color:var(--gold-2); }
+  .vendor-link{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px;}
+  .vendor-link:hover{ color:var(--gold-2); }
   .loc-pill{
     display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:10px;
     background:rgba(198,160,95,0.18); color:var(--gold-2);
@@ -1353,8 +1368,52 @@
             <input type="number" id="cateringCount" min="0" step="1" placeholder="0">
           </div>
           <div class="form-field full">
-            <label for="cateringMenu">납품 메뉴 *</label>
-            <input type="text" id="cateringMenu" placeholder="예: 제육볶음 도시락, 계란말이, 배추김치">
+            <label>납품 메뉴 구성 * <span class="sub" style="font-weight:400;">(항목별로 입력하거나, [선택] 버튼으로 최근·자주 쓴 메뉴에서 골라보세요)</span></label>
+            <div class="recipe-toolbar" style="margin-bottom:6px;">
+              <button type="button" class="load-btn secondary" id="cateringFillLastBtn">🔁 이 거래처 최근 메뉴로 한번에 채우기</button>
+            </div>
+            <div class="menu-slots" id="cateringMenuSlots">
+              <div class="menu-slot-row" data-slot="rice">
+                <span class="ms-label">밥</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_rice" placeholder="예: 백미밥">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="rice">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="soup">
+                <span class="ms-label">국</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_soup" placeholder="예: 된장국">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="soup">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="main">
+                <span class="ms-label">메인</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_main" placeholder="예: 제육볶음">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="main">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="side1">
+                <span class="ms-label">반찬1</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_side1" placeholder="예: 계란말이">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="side1">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="side2">
+                <span class="ms-label">반찬2</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_side2" placeholder="">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="side2">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="side3">
+                <span class="ms-label">반찬3</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_side3" placeholder="">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="side3">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="side4">
+                <span class="ms-label">반찬4</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_side4" placeholder="">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="side4">선택</button>
+              </div>
+              <div class="menu-slot-row" data-slot="side5">
+                <span class="ms-label">반찬5</span>
+                <input type="text" class="day-edit-input" id="cateringSlot_side5" placeholder="">
+                <button type="button" class="load-btn secondary ms-pick-btn" data-slot="side5">선택</button>
+              </div>
+            </div>
           </div>
           <div class="form-field">
             <label for="cateringUnitPrice">단가(원)</label>
@@ -1376,7 +1435,10 @@
         </div>
       </div>
 
-      <div class="section-title" style="margin-top:30px;"><h2>납품 기록 목록</h2></div>
+      <div class="section-title" style="margin-top:30px;"><h2>납품 기록 목록</h2><span class="sub" id="cateringHistoryCount"></span></div>
+      <div class="recipe-toolbar">
+        <input type="text" id="cateringHistorySearch" placeholder="업체명으로 검색 (예: 하우스토크) — 목록에서 업체명을 클릭해도 검색됩니다">
+      </div>
       <div style="overflow-x:auto;" id="cateringTableWrap"></div>
 
       <div class="section-title" style="margin-top:34px;"><h2>우리 회사 정보 (공급자)</h2><span class="sub">청구서·견적서에 자동으로 채워집니다</span></div>
@@ -1586,9 +1648,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'lunchboxSide1','lunchboxSide2','lunchboxSide3','lunchboxSide4','lunchboxSide5','lunchboxSide6',
    'lunchboxPreviewBtn','lunchboxPrintBtn',
    'printPreviewWrap','recipeModal','modalBody','modalCloseBtn',
-   'cateringDate','cateringType','cateringVendor','cateringContact','cateringPhone','cateringCount','cateringMenu','cateringUnitPrice',
+   'cateringDate','cateringType','cateringVendor','cateringContact','cateringPhone','cateringCount','cateringUnitPrice',
    'cateringTotal','cateringNote','cateringSubmit','cateringStatus','cateringTableWrap',
-   'cateringImportBtn','cateringImportStatus',
+   'cateringImportBtn','cateringImportStatus','cateringHistorySearch','cateringHistoryCount',
    'cateringCalPrevBtn','cateringCalNextBtn','cateringCalTodayBtn','cateringCalMonthLabel','cateringCalLegend','cateringCalGrid',
    'cateringFormTitle','cateringCancelEditBtn','vendorDatalist',
    'vendorCountLabel','vendorSearch','vendorAddBtn','vendorTable',
@@ -4538,7 +4600,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           rowNum: d.id,
           date: v.date && v.date.toDate ? v.date.toDate() : new Date(v.date),
           type: v.type || '도시락', vendor: v.vendor || '', contact: v.contact || '-', phone: v.phone || '-',
-          count: Number(v.count) || 0, menu: v.menu || '', unitPrice: Number(v.unitPrice) || 0, total: Number(v.total) || 0, note: v.note || '-',
+          count: Number(v.count) || 0, menu: v.menu || '', menuParts: v.menuParts || null, unitPrice: Number(v.unitPrice) || 0, total: Number(v.total) || 0, note: v.note || '-',
         };
       }).filter(x=>x.date);
       renderCateringTab();
@@ -5997,16 +6059,27 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   function drawCateringTable(){
-    const sorted = [...DATA.cateringLog].sort((a,b)=> b.date - a.date);
-    if(sorted.length === 0){
+    const q = (els.cateringHistorySearch && els.cateringHistorySearch.value.trim().toLowerCase()) || '';
+    const all = [...DATA.cateringLog].sort((a,b)=> b.date - a.date);
+    const sorted = q ? all.filter(r => r.vendor.toLowerCase().includes(q)) : all;
+    if(els.cateringHistoryCount){
+      els.cateringHistoryCount.textContent = q
+        ? `"${q}" 검색됨: ${sorted.length}건${sorted.length ? ` · 총 ${sorted.reduce((s,r)=>s+r.total,0).toLocaleString('ko-KR')}원` : ''}`
+        : `총 ${all.length}건`;
+    }
+    if(all.length === 0){
       els.cateringTableWrap.innerHTML = '<p style="color:var(--muted); font-size:13px; padding:10px 0;">아직 등록된 납품 기록이 없습니다.</p>';
+      return;
+    }
+    if(sorted.length === 0){
+      els.cateringTableWrap.innerHTML = '<p style="color:var(--muted); font-size:13px; padding:10px 0;">검색 결과가 없습니다.</p>';
       return;
     }
     let html = '<table class="change-log-table"><thead><tr><th>날짜</th><th>구분</th><th>업체명</th><th>담당자</th><th>연락처</th><th>인원수</th><th>납품 메뉴</th><th>단가</th><th>총액</th><th>비고</th><th></th></tr></thead><tbody>';
     sorted.forEach(r=>{
       const dateStr = r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0')+'-'+String(r.date.getDate()).padStart(2,'0');
       html += `<tr class="row-link" data-rownum="${r.rowNum}">
-        <td>${dateStr}</td><td>${escapeHtml(r.type)}</td><td>${escapeHtml(r.vendor)}</td><td>${escapeHtml(r.contact)}</td><td>${escapeHtml(r.phone)}</td><td>${r.count.toLocaleString('ko-KR')}명</td>
+        <td>${dateStr}</td><td>${escapeHtml(r.type)}</td><td><span class="vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 업체로 검색">${escapeHtml(r.vendor)}</span></td><td>${escapeHtml(r.contact)}</td><td>${escapeHtml(r.phone)}</td><td>${r.count.toLocaleString('ko-KR')}명</td>
         <td>${escapeHtml(r.menu)}</td><td>${r.unitPrice.toLocaleString('ko-KR')}원</td><td>${r.total.toLocaleString('ko-KR')}원</td><td>${escapeHtml(r.note)}</td>
         <td><button class="inv-del-btn" data-rownum="${r.rowNum}">삭제</button></td>
       </tr>`;
@@ -6016,7 +6089,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
     els.cateringTableWrap.querySelectorAll('tr.row-link').forEach(tr=>{
       tr.addEventListener('click', (e)=>{
-        if(e.target.closest('.inv-del-btn')) return;
+        if(e.target.closest('.inv-del-btn') || e.target.closest('.vendor-link')) return;
         const rec = DATA.cateringLog.find(x=>String(x.rowNum) === tr.dataset.rownum);
         if(rec) startEditCateringRow(rec);
       });
@@ -6028,7 +6101,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         if(rec) deleteCateringRow(rec);
       });
     });
+    els.cateringTableWrap.querySelectorAll('.vendor-link').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(els.cateringHistorySearch){ els.cateringHistorySearch.value = el.dataset.vendor; drawCateringTable(); }
+      });
+    });
   }
+  if(els.cateringHistorySearch) els.cateringHistorySearch.addEventListener('input', drawCateringTable);
 
   /* ---------------- 예약 현황 캘린더 (도시락·케이터링 납품 기록을 달력으로) ---------------- */
   let cateringCalYear, cateringCalMonth;
@@ -6188,7 +6268,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       els.recipeModal.classList.remove('active');
       endEditCateringMode();
       els.cateringVendor.value=''; els.cateringContact.value=''; els.cateringPhone.value=''; els.cateringCount.value='';
-      els.cateringMenu.value=''; els.cateringUnitPrice.value=''; els.cateringNote.value='';
+      clearMenuSlots(); els.cateringUnitPrice.value=''; els.cateringNote.value='';
       computeCateringTotal();
       els.cateringStatus.textContent = '';
       els.cateringDate.value = toInputDate(dateObj);
@@ -6224,6 +6304,148 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     renderCateringCalendar();
   });
 
+  // 납품 메뉴를 한 줄 자유입력 대신 밥/국/메인/반찬1~5로 나눠 입력한다 — 저장은
+  // 여전히 기존과 같은 "쉼표로 이어붙인 한 줄"(menu)로 하니 인쇄·목록 등 다른 코드는
+  // 손댈 필요가 없고, 대신 각 칸이 무엇이었는지(menuParts)도 같이 저장해서
+  // 나중에 수정할 때 다시 정확히 나눠서 보여줄 수 있게 한다.
+  const MENU_SLOTS = [
+    {key:'rice', label:'밥', group:'밥'},
+    {key:'soup', label:'국', group:'국/찌개'},
+    {key:'main', label:'메인', group:'메인요리'},
+    {key:'side1', label:'반찬1', group:'반찬'},
+    {key:'side2', label:'반찬2', group:'반찬'},
+    {key:'side3', label:'반찬3', group:'반찬'},
+    {key:'side4', label:'반찬4', group:'반찬'},
+    {key:'side5', label:'반찬5', group:'반찬'},
+  ];
+  function menuSlotInput(key){ return document.getElementById('cateringSlot_'+key); }
+  function clearMenuSlots(){ MENU_SLOTS.forEach(s=>{ const el = menuSlotInput(s.key); if(el) el.value=''; }); }
+  function readMenuSlots(){
+    const vals = {};
+    MENU_SLOTS.forEach(s=>{ const el = menuSlotInput(s.key); vals[s.key] = el ? el.value.trim() : ''; });
+    return vals;
+  }
+  function joinMenuSlots(vals){ return MENU_SLOTS.map(s=>vals[s.key]).filter(Boolean).join(', '); }
+  // menuParts가 없는(예전에 자유입력으로 저장됐던) 기록은 쉼표로 나눈 순서를
+  // 밥→국→메인→반찬1~5 순서로 그대로 배정해 최대한 맞춰 보여준다. 8칸이 넘는
+  // 나머지는 잃어버리지 않도록 마지막 칸(반찬5)에 이어붙인다.
+  function splitMenuIntoSlots(rec){
+    if(rec.menuParts) return rec.menuParts;
+    const parts = String(rec.menu||'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean);
+    const keys = MENU_SLOTS.map(s=>s.key);
+    const result = {};
+    keys.forEach((k,i)=>{ result[k] = parts[i] || ''; });
+    if(parts.length > keys.length){
+      const lastKey = keys[keys.length-1];
+      result[lastKey] = [result[lastKey], ...parts.slice(keys.length)].filter(Boolean).join(', ');
+    }
+    return result;
+  }
+  function fillMenuSlots(rec){
+    const slots = splitMenuIntoSlots(rec);
+    MENU_SLOTS.forEach(s=>{ const el = menuSlotInput(s.key); if(el) el.value = slots[s.key] || ''; });
+  }
+
+  // 슬롯 채우기 팝업에 쓸 메뉴 후보를 분류별로 모은다 — 월간 식단표에서 실제로 쓴
+  // 메뉴(날짜별 items, 이미 밥/국찌개/메인요리/반찬 등으로 분류돼 있음)를 기본으로 하고,
+  // 식단표엔 없지만 케이터링 납품에만 쓴 메뉴는 "기타"로 모아 놓친 게 없게 한다.
+  function buildDishPoolByGroup(){
+    const pool = {};
+    const ensure = (g) => pool[g] || (pool[g] = new Map());
+    const {groupFreq} = dishFrequency(DATA.calendarSheets || []);
+    Object.entries(groupFreq||{}).forEach(([g, freqObj])=>{
+      const m = ensure(g);
+      Object.entries(freqObj||{}).forEach(([name, count]) => { m.set(name, (m.get(name)||0) + count); });
+    });
+    const known = new Set();
+    Object.values(pool).forEach(m => m.forEach((_, name) => known.add(name)));
+    (DATA.cateringLog||[]).forEach(r=>{
+      String(r.menu||'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean).forEach(name=>{
+        if(known.has(name)) return;
+        ensure('기타').set(name, 1);
+        known.add(name);
+      });
+    });
+    return pool;
+  }
+
+  function openMenuSlotPicker(slotKey){
+    const slot = MENU_SLOTS.find(s=>s.key===slotKey);
+    if(!slot) return;
+    const pool = buildDishPoolByGroup();
+    const vendorName = els.cateringVendor.value.trim();
+    // 지금 입력 중인 거래처에 최근 납품한 메뉴가 있으면 맨 위에 따로 보여준다 —
+    // "지난번과 비슷하게" 고를 때 제일 빠른 지름길이라 기본 분류보다 먼저 보여준다.
+    const vendorRecent = vendorName
+      ? Array.from(new Set(
+          (DATA.cateringLog||[])
+            .filter(r=>r.vendor===vendorName)
+            .sort((a,b)=> b.date - a.date)
+            .slice(0,6)
+            .flatMap(r => String(r.menu||'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean))
+        )).slice(0,20)
+      : [];
+
+    const pillBtn = (name) => `<button type="button" class="ms-dish-btn" data-name="${escapeAttrVal(name)}">${escapeHtml(name)}</button>`;
+    const groupSection = (groupName) => {
+      const map = pool[groupName];
+      if(!map || map.size===0) return '';
+      const sorted = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]);
+      return `<div class="ms-group"><div class="ms-group-title">${escapeHtml(groupName)}</div><div class="ms-dish-list">${sorted.map(([name])=>pillBtn(name)).join('')}</div></div>`;
+    };
+
+    els.modalBody.innerHTML = `
+      <h3>메뉴 선택 — ${escapeHtml(slot.label)}</h3>
+      ${vendorRecent.length ? `<div class="ms-group"><div class="ms-group-title">📋 ${escapeHtml(vendorName)}에 최근 납품한 메뉴</div><div class="ms-dish-list">${vendorRecent.map(pillBtn).join('')}</div></div>` : ''}
+      <input type="text" class="day-edit-input" id="msSearchInput" placeholder="메뉴 검색..." style="margin-bottom:10px;">
+      <div id="msGroupsWrap">
+        ${groupSection(slot.group)}
+        ${Object.keys(pool).filter(g=>g!==slot.group).map(groupSection).join('')}
+      </div>
+      <div class="modal-form-actions">
+        <button class="load-btn secondary" id="msCancelBtn">닫기</button>
+      </div>
+    `;
+    els.recipeModal.classList.add('active');
+    document.getElementById('msCancelBtn').addEventListener('click', ()=> els.recipeModal.classList.remove('active'));
+
+    els.modalBody.querySelectorAll('.ms-dish-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const input = menuSlotInput(slotKey);
+        if(input) input.value = btn.dataset.name;
+        els.recipeModal.classList.remove('active');
+      });
+    });
+
+    const searchInput = document.getElementById('msSearchInput');
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim().toLowerCase();
+      els.modalBody.querySelectorAll('.ms-dish-btn').forEach(btn=>{
+        btn.style.display = (!q || btn.dataset.name.toLowerCase().includes(q)) ? '' : 'none';
+      });
+      els.modalBody.querySelectorAll('.ms-group').forEach(g=>{
+        const anyVisible = Array.from(g.querySelectorAll('.ms-dish-btn')).some(b=>b.style.display !== 'none');
+        g.style.display = anyVisible ? '' : 'none';
+      });
+    });
+  }
+  document.querySelectorAll('.ms-pick-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> openMenuSlotPicker(btn.dataset.slot));
+  });
+  // "생각하지 못한 것" 중 하나 — 같은 거래처는 대개 비슷한 구성으로 계속 나가니,
+  // 슬롯을 하나씩 고르는 대신 최근 한 건을 통째로 불러와 바로 수정만 하게 해준다.
+  const cateringFillLastBtn = document.getElementById('cateringFillLastBtn');
+  if(cateringFillLastBtn){
+    cateringFillLastBtn.addEventListener('click', ()=>{
+      const vendorName = els.cateringVendor.value.trim();
+      if(!vendorName){ toast('업체명을 먼저 입력해 주세요.', true); return; }
+      const recs = (DATA.cateringLog||[]).filter(r=>r.vendor===vendorName).sort((a,b)=>b.date-a.date);
+      if(recs.length === 0){ toast(`${vendorName}의 이전 납품 기록이 없습니다.`, true); return; }
+      fillMenuSlots(recs[0]);
+      toast(`✓ ${vendorName}의 최근 메뉴(${toInputDate(recs[0].date)})로 채웠습니다. 필요하면 칸별로 고쳐주세요.`);
+    });
+  }
+
   let cateringEditingRowNum = null;
   function startEditCateringRow(rec){
     cateringEditingRowNum = rec.rowNum;
@@ -6233,7 +6455,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.cateringContact.value = rec.contact !== '-' ? rec.contact : '';
     els.cateringPhone.value = rec.phone !== '-' ? rec.phone : '';
     els.cateringCount.value = rec.count;
-    els.cateringMenu.value = rec.menu;
+    fillMenuSlots(rec);
     els.cateringUnitPrice.value = rec.unitPrice;
     els.cateringNote.value = rec.note !== '-' ? rec.note : '';
     computeCateringTotal();
@@ -6251,7 +6473,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
   if(els.cateringCancelEditBtn) els.cateringCancelEditBtn.addEventListener('click', ()=>{
     endEditCateringMode();
-    els.cateringVendor.value=''; els.cateringContact.value=''; els.cateringPhone.value=''; els.cateringCount.value=''; els.cateringMenu.value='';
+    els.cateringVendor.value=''; els.cateringContact.value=''; els.cateringPhone.value=''; els.cateringCount.value='';
+    clearMenuSlots();
     els.cateringUnitPrice.value=''; els.cateringNote.value='';
     computeCateringTotal();
     els.cateringStatus.textContent = '';
@@ -6304,7 +6527,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const dateVal = els.cateringDate.value;
       const vendor = els.cateringVendor.value.trim();
       const count = Number(els.cateringCount.value);
-      const menu = els.cateringMenu.value.trim();
+      const menuSlotVals = readMenuSlots();
+      const menu = joinMenuSlots(menuSlotVals);
       if(!dateVal || !vendor || !count || !menu){
         els.cateringStatus.textContent = '⚠ 날짜·업체명·인원수·메뉴는 필수입니다.';
         els.cateringStatus.style.color = 'var(--stamp)';
@@ -6323,7 +6547,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
       const data = {
         date: window.SumokFB.Timestamp.fromDate(dateObj), type: els.cateringType.value, vendor, contact, phone,
-        count, menu, unitPrice, total, note,
+        count, menu, menuParts: menuSlotVals, unitPrice, total, note,
       };
       const isEdit = cateringEditingRowNum !== null;
       try{
@@ -6335,7 +6559,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         els.cateringStatus.textContent = '✓ 저장 완료';
         els.cateringStatus.style.color = 'var(--good)';
         endEditCateringMode();
-        els.cateringVendor.value=''; els.cateringContact.value=''; els.cateringPhone.value=''; els.cateringCount.value=''; els.cateringMenu.value='';
+        els.cateringVendor.value=''; els.cateringContact.value=''; els.cateringPhone.value=''; els.cateringCount.value='';
+        clearMenuSlots();
         els.cateringUnitPrice.value=''; els.cateringNote.value='';
         computeCateringTotal();
       }catch(err){
