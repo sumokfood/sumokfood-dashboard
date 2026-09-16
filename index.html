@@ -884,9 +884,23 @@
       </div>
       <div class="cal-grid" id="purchaseCalGrid"></div>
 
+      <div class="section-title" style="margin-top:36px;"><h2>매입 거래처 관리</h2><span class="sub" id="purchaseVendorCountLabel"></span></div>
+      <div class="note-box" style="max-width:none; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <span style="flex:1; min-width:220px;">ℹ️ 물건을 사 오는 거래처(마트·정육점·주유소 등)의 연락처를 등록·관리합니다. 이미 매입 기록에 있는 거래처는 아래 버튼으로 한 번에 불러올 수 있어요.</span>
+        <button class="load-btn secondary" id="purchaseVendorSeedBtn">📥 매입 내역에서 거래처 불러오기</button>
+      </div>
+      <div class="save-status" id="purchaseVendorSeedStatus" style="margin-bottom:10px;"></div>
+      <div class="recipe-toolbar">
+        <input type="text" id="purchaseVendorSearch" placeholder="거래처명 검색...">
+        <button class="load-btn" id="purchaseVendorAddBtn" style="margin-left:auto;">+ 거래처 등록</button>
+      </div>
+      <div style="overflow-x:auto; max-height:340px; overflow-y:auto; border:1px solid var(--line); border-radius:4px;">
+        <table class="change-log-table" id="purchaseVendorTable"></table>
+      </div>
+
       <div class="section-title" style="margin-top:36px;"><h2>매입 상세내역</h2><span class="sub" id="purchaseDetailCount"></span></div>
       <div class="recipe-toolbar">
-        <input type="text" id="purchaseDetailSearch" placeholder="품목명 검색... (예: 애호박, 미역줄기)">
+        <input type="text" id="purchaseDetailSearch" placeholder="품목명 또는 거래처명 검색... (예: 애호박, 델리마트)">
       </div>
       <div class="note-box" style="max-width:none;">
         ℹ️ <strong>'전회 대비'는 브랜드·용량이 달라도 같은 재료로 보이는 항목끼리 자동으로 묶어서</strong> 직전 구매가와 비교한 값입니다.
@@ -1674,6 +1688,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'finKpiGrid','periodLabel','periodLabel2','donutCenterValue','donutCenterLabel','kpiMonthSelect','salesMonthSelect','kpiViewToggleBtn',
    'pasteArea','pasteClearBtn','pastePreviewBtn','pasteConfirmBtn','pastePreviewWrap','previewTable',
    'purchaseImportBtn','purchaseImportStatus',
+   'purchaseVendorCountLabel','purchaseVendorSeedBtn','purchaseVendorSeedStatus','purchaseVendorSearch','purchaseVendorAddBtn','purchaseVendorTable',
    'purchaseDetailTable','purchaseDetailSearch','purchaseDetailCount',
    'purchaseCalPrevBtn','purchaseCalNextBtn','purchaseCalTodayBtn','purchaseCalMonthLabel','purchaseCalGrid',
    'salesDetailTable','salesDetailSearch','salesDetailCount','salesDetailViewToggle','salesDetailModeToggle',
@@ -1706,7 +1721,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     inventoryItems: [],   // [{rowNum(=Firestore 문서ID), name, category, location, unit, note}] — Firestore 실시간 연동
     inventoryLog: [],     // [{rowNum(=Firestore 문서ID), date, type, name, category, location, qty, unit, note}] — Firestore 실시간 연동
     reservationIngredients: [], // [{rowNum(=Firestore 문서ID), cateringRowNum(cateringLog 문서ID), date, vendor, type, name, needQty, unit, bought, usedQty, note}] — Firestore 실시간 연동
-    vendors: [],          // [{rowNum, name, contact, phone, email, address, note}]
+    vendors: [],          // [{rowNum, name, contact, phone, email, address, note}] — 케이터링 납품처(고객)
+    purchaseVendors: [],  // [{rowNum(=Firestore 문서ID), name, phone, contact, note}] — 매입 거래처(공급처), Firestore 실시간 연동
     companyInfo: {},       // {name, ceo, regNo, address, bizType, bizItem, phone, fax, email, account}
     priceTierMenus: [],    // [{rowNum(=Firestore 문서ID), titleRaw, priceLabel, priceNum, version, mainLabel, descLabel, itemCount, items:[{id,category,name,desc,isDivider}], note}] — Firestore 실시간 연동
     assumedYear: new Date().getFullYear(),
@@ -2358,6 +2374,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const prevUtilityLog = (DATA && DATA.utilityLog) || [];
     const prevPayrollLog = (DATA && DATA.payrollLog) || []; // 급여도 이제 Firestore가 채운다
     const prevVendors = (DATA && DATA.vendors) || [];
+    const prevPurchaseVendors = (DATA && DATA.purchaseVendors) || []; // 매입 거래처도 Firestore가 채운다
     const prevCompanyInfo = (DATA && DATA.companyInfo) || {};
     const prevInventoryItems = (DATA && DATA.inventoryItems) || []; // 재고도 이제 Firestore가 채운다
     const prevInventoryLog = (DATA && DATA.inventoryLog) || [];
@@ -2368,7 +2385,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const prevCalendarSheets = (DATA && DATA.calendarSheets) || []; // 식단표도 이제 Firestore가 채운다
     const prevPriceTierMenus = (DATA && DATA.priceTierMenus) || []; // 가격별 메뉴도 이제 Firestore가 채운다
 
-    DATA = {recipes: prevRecipes, recipeCategories: prevRecipeCategories, changeLog, calendarSheets: prevCalendarSheets, cateringLog: prevCateringLog, utilityLog: prevUtilityLog, payrollLog: prevPayrollLog, inventoryItems: prevInventoryItems, inventoryLog: prevInventoryLog, reservationIngredients: prevReservationIngredients, vendors: prevVendors, companyInfo: prevCompanyInfo, priceTierMenus: prevPriceTierMenus, assumedYear};
+    DATA = {recipes: prevRecipes, recipeCategories: prevRecipeCategories, changeLog, calendarSheets: prevCalendarSheets, cateringLog: prevCateringLog, utilityLog: prevUtilityLog, payrollLog: prevPayrollLog, inventoryItems: prevInventoryItems, inventoryLog: prevInventoryLog, reservationIngredients: prevReservationIngredients, vendors: prevVendors, purchaseVendors: prevPurchaseVendors, companyInfo: prevCompanyInfo, priceTierMenus: prevPriceTierMenus, assumedYear};
   }
 
   /* ---------------- Render: KPI + top-level charts ---------------- */
@@ -2382,6 +2399,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     renderPrintTab();
     renderCateringTab();
     renderPriceTierTab();
+    renderPurchaseVendorTab();
     renderUtilityTab();
     renderPayrollTab();
     renderSettlementTab();
@@ -3975,7 +3993,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   function renderPurchaseDetailTable(){
     if(!els.purchaseDetailTable) return;
     const q = (els.purchaseDetailSearch && els.purchaseDetailSearch.value.trim().toLowerCase()) || '';
-    const rows = (FIN.detailRows || []).filter(r => !q || r.rawItem.toLowerCase().includes(q) || r.norm.toLowerCase().includes(q));
+    const rows = (FIN.detailRows || []).filter(r => !q || r.rawItem.toLowerCase().includes(q) || r.norm.toLowerCase().includes(q) || String(r.vendor||'').toLowerCase().includes(q));
     const headers = ['일자','품목명','분류','구입처','단가','수량','총액','전회 대비'];
     let html = '<thead><tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach(r=>{
@@ -3990,15 +4008,187 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <span style="color:var(--muted); font-size:10.5px;"> (전회 ${fmtWon(r.prevPrice)}원)</span>`;
       }
       html += `<tr>
-        <td>${dateStr}</td><td><strong>${escapeHtml(r.rawItem)}</strong></td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.vendor)}</td>
+        <td>${dateStr}</td><td><strong>${escapeHtml(r.rawItem)}</strong></td><td>${escapeHtml(r.category)}</td><td class="pd-vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 거래처로 검색" style="cursor:pointer; text-decoration:underline dotted;">${escapeHtml(r.vendor)}</td>
         <td>${fmtWon(r.price)}원</td><td>${fmtWon(r.qty)}</td><td>${fmtWon(r.amount)}원</td><td>${changeHtml}</td>
       </tr>`;
     });
     html += '</tbody>';
     els.purchaseDetailTable.innerHTML = html;
     if(els.purchaseDetailCount) els.purchaseDetailCount.textContent = `총 ${rows.length}건`;
+    els.purchaseDetailTable.querySelectorAll('.pd-vendor-link').forEach(td=>{
+      td.addEventListener('click', ()=>{
+        if(els.purchaseDetailSearch){ els.purchaseDetailSearch.value = td.dataset.vendor; renderPurchaseDetailTable(); }
+      });
+    });
   }
   if(els.purchaseDetailSearch) els.purchaseDetailSearch.addEventListener('input', renderPurchaseDetailTable);
+
+  /* ---------------- 매입 거래처(공급처) 관리 ---------------- */
+  // 도시락·케이터링 탭의 "거래처"(vendorLog)는 납품 나가는 고객사고, 이건 반대로
+  // 물건을 사 오는 공급처(마트·정육점·주유소 등)다 — 서로 다른 컬렉션으로 관리한다.
+  function purchaseVendorCollRef(){ return window.SumokFB.collection(window.SumokFB.db, 'purchaseVendors'); }
+  function purchaseVendorDocRef(id){ return window.SumokFB.doc(window.SumokFB.db, 'purchaseVendors', id); }
+
+  function renderPurchaseVendorTab(){
+    if(!els.purchaseVendorTable) return;
+    const vendors = DATA.purchaseVendors || [];
+    if(els.purchaseVendorCountLabel) els.purchaseVendorCountLabel.textContent = `총 ${vendors.length}개`;
+    renderPurchaseVendorTable();
+  }
+  function renderPurchaseVendorTable(){
+    if(!els.purchaseVendorTable) return;
+    const q = (els.purchaseVendorSearch && els.purchaseVendorSearch.value.trim().toLowerCase()) || '';
+    const vendors = (DATA.purchaseVendors || []).filter(v => !q || v.name.toLowerCase().includes(q));
+    let html = '<thead><tr><th>업체명</th><th>전화번호</th><th>담당자</th><th>비고</th><th></th></tr></thead><tbody>';
+    vendors.forEach(v=>{
+      html += `<tr class="row-link" data-rownum="${escapeAttrVal(v.rowNum)}">
+        <td><strong>${escapeHtml(v.name)}</strong></td>
+        <td>${escapeHtml(v.phone)}</td>
+        <td>${escapeHtml(v.contact)}</td>
+        <td>${escapeHtml(v.note)}</td>
+        <td><button class="inv-del-btn" data-rownum="${escapeAttrVal(v.rowNum)}">삭제</button></td>
+      </tr>`;
+    });
+    html += '</tbody>';
+    els.purchaseVendorTable.innerHTML = html;
+    if(vendors.length === 0) els.purchaseVendorTable.innerHTML += '<tbody><tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">등록된 거래처가 없습니다.</td></tr></tbody>';
+    els.purchaseVendorTable.querySelectorAll('tr.row-link').forEach(tr=>{
+      tr.addEventListener('click', (e)=>{
+        if(e.target.closest('.inv-del-btn')) return;
+        const v = (DATA.purchaseVendors||[]).find(x=>String(x.rowNum)===tr.dataset.rownum);
+        if(v) openPurchaseVendorForm(v);
+      });
+    });
+    els.purchaseVendorTable.querySelectorAll('.inv-del-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const v = (DATA.purchaseVendors||[]).find(x=>String(x.rowNum)===btn.dataset.rownum);
+        if(v) deletePurchaseVendor(v);
+      });
+    });
+  }
+  if(els.purchaseVendorSearch) els.purchaseVendorSearch.addEventListener('input', renderPurchaseVendorTable);
+
+  // 이 거래처에서 실제로 사 온 품목·건수·금액을 매입 상세내역(FIN.detailRows)에서
+  // 바로 뽑아 보여준다 — 따로 입력할 필요 없이 항상 실제 매입 기록과 일치한다.
+  function purchaseVendorPurchaseSummary(name){
+    const rows = (FIN.detailRows||[]).filter(r => r.vendor === name).sort((a,b)=> (b.date||0)-(a.date||0));
+    const totalAmt = rows.reduce((s,r)=>s+r.amount,0);
+    return {rows, totalAmt};
+  }
+
+  function openPurchaseVendorForm(existing){
+    const v = existing || {};
+    const isNew = !existing;
+    const summary = existing ? purchaseVendorPurchaseSummary(existing.name) : null;
+    const historyHtml = summary ? `
+      <div class="modal-field">
+        <div class="mf-label">매입 이력 (${summary.rows.length}건, 누적 ${fmtWon(summary.totalAmt)}원)</div>
+        ${summary.rows.length === 0 ? '<div class="mf-value" style="color:var(--muted);">이 거래처로 기록된 매입 내역이 없습니다.</div>' : `
+        <div style="max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:4px; margin-top:6px;">
+          <table class="change-log-table" style="font-size:12px;">
+            <thead><tr><th>날짜</th><th>품목</th><th>수량</th><th>금액</th></tr></thead>
+            <tbody>${summary.rows.slice(0,30).map(r=>{
+              const d = r.date ? (r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0')+'-'+String(r.date.getDate()).padStart(2,'0')) : '-';
+              return `<tr><td>${d}</td><td>${escapeHtml(r.rawItem)}</td><td>${fmtWon(r.qty)}</td><td>${fmtWon(r.amount)}원</td></tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>
+        ${summary.rows.length > 30 ? `<div class="sub" style="margin-top:4px;">최근 30건만 표시 — 전체 내역은 위 '매입 상세내역'에서 "${escapeHtml(existing.name)}"로 검색하세요.</div>` : ''}`}
+      </div>` : '';
+    els.modalBody.innerHTML = `
+      <h3>${isNew ? '새 매입 거래처 등록' : '거래처 수정 — ' + escapeHtml(v.name)}</h3>
+      ${recipeFormField('pvFormName', '업체명 *', v.name, {placeholder:'예: 델리마트'})}
+      ${recipeFormField('pvFormPhone', '전화번호', v.phone, {placeholder:'예: 041-534-7575'})}
+      ${recipeFormField('pvFormContact', '담당자', v.contact, {placeholder:'예: 조원용'})}
+      ${recipeFormField('pvFormNote', '비고 (취급 품목 등)', v.note, {textarea:true, rows:2, placeholder:'예: 식자재 전반, 냉동육류 전문 등'})}
+      ${historyHtml}
+      <div class="modal-form-actions">
+        <div class="save-status" id="pvFormStatus" style="flex:1;"></div>
+        ${!isNew ? `<button class="load-btn secondary" id="pvFormDelBtn" style="color:var(--stamp); border-color:var(--stamp);">삭제</button>` : ''}
+        <button class="load-btn secondary" id="pvFormCancelBtn">취소</button>
+        <button class="submit-btn confirm" id="pvFormSaveBtn">${isNew ? '등록' : '저장'}</button>
+      </div>
+    `;
+    els.recipeModal.classList.add('active');
+    document.getElementById('pvFormCancelBtn').addEventListener('click', ()=> els.recipeModal.classList.remove('active'));
+    document.getElementById('pvFormSaveBtn').addEventListener('click', ()=> submitPurchaseVendorForm(existing));
+    const delBtn = document.getElementById('pvFormDelBtn');
+    if(delBtn) delBtn.addEventListener('click', ()=> deletePurchaseVendor(existing));
+  }
+
+  async function submitPurchaseVendorForm(existing){
+    const name = document.getElementById('pvFormName').value.trim();
+    const statusEl = document.getElementById('pvFormStatus');
+    if(!name){ statusEl.textContent = '⚠ 업체명은 필수입니다.'; statusEl.style.color = 'var(--stamp)'; return; }
+    if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+    const phone = document.getElementById('pvFormPhone').value.trim() || '-';
+    const contact = document.getElementById('pvFormContact').value.trim() || '-';
+    const note = document.getElementById('pvFormNote').value.trim() || '-';
+    statusEl.textContent = '저장 중...';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      const data = {name, phone, contact, note};
+      if(existing){
+        await window.SumokFB.updateDoc(purchaseVendorDocRef(existing.rowNum), data);
+      }else{
+        await window.SumokFB.addDoc(purchaseVendorCollRef(), data);
+      }
+      els.recipeModal.classList.remove('active');
+    }catch(err){
+      statusEl.textContent = '✗ 저장 실패: ' + (err.message || err.code || '');
+      statusEl.style.color = 'var(--stamp)';
+    }
+  }
+
+  async function deletePurchaseVendor(v){
+    if(!confirm(`"${v.name}" 거래처를 삭제할까요?\n(이미 기록된 매입 내역은 그대로 유지됩니다.)`)) return;
+    try{
+      await window.SumokFB.deleteDoc(purchaseVendorDocRef(v.rowNum));
+      els.recipeModal.classList.remove('active');
+    }catch(err){
+      toast('삭제 실패: ' + (err.message || err.code || ''), true);
+    }
+  }
+
+  if(els.purchaseVendorAddBtn){
+    els.purchaseVendorAddBtn.addEventListener('click', ()=>{
+      if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+      openPurchaseVendorForm(null);
+    });
+  }
+
+  // 매입 내역(FIN.vendorSet)에 이미 등장하는 거래처명 중 아직 등록 안 된 것만 골라
+  // 한 번에 등록한다 — 이름을 일일이 타이핑하지 않아도 되게.
+  async function seedPurchaseVendorsFromHistory(){
+    if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+    const btn = els.purchaseVendorSeedBtn, statusEl = els.purchaseVendorSeedStatus;
+    if(btn) btn.disabled = true;
+    if(statusEl){ statusEl.textContent = '불러오는 중...'; statusEl.style.color = 'var(--muted)'; }
+    try{
+      const existingNames = new Set((DATA.purchaseVendors||[]).map(v=>normWs(v.name)));
+      const historyNames = Array.from(FIN.vendorSet || []);
+      const toAdd = historyNames.filter(n => n && !existingNames.has(normWs(n)));
+      if(toAdd.length === 0){
+        if(statusEl){ statusEl.textContent = 'ℹ 매입 내역의 거래처가 이미 전부 등록되어 있습니다.'; statusEl.style.color = 'var(--muted)'; }
+        if(btn) btn.disabled = false;
+        return;
+      }
+      const { db, collection, doc, writeBatch } = window.SumokFB;
+      let batch = writeBatch(db), ops = 0;
+      for(const name of toAdd){
+        batch.set(doc(collection(db,'purchaseVendors')), {name, phone:'-', contact:'-', note:'매입 내역에서 자동 등록'});
+        ops++;
+        if(ops >= 400){ await batch.commit(); batch = writeBatch(db); ops = 0; }
+      }
+      if(ops > 0) await batch.commit();
+      if(statusEl){ statusEl.textContent = `✓ ${toAdd.length}개 거래처를 불러왔습니다.`; statusEl.style.color = 'var(--good)'; }
+    }catch(err){
+      if(statusEl){ statusEl.textContent = '✗ 실패: ' + (err.message || err.code || ''); statusEl.style.color = 'var(--stamp)'; }
+    }
+    if(btn) btn.disabled = false;
+  }
+  if(els.purchaseVendorSeedBtn) els.purchaseVendorSeedBtn.addEventListener('click', seedPurchaseVendorsFromHistory);
 
   /* ---------------- 일별 매입 캘린더 ---------------- */
   let purchaseCalYear, purchaseCalMonth;
@@ -4431,6 +4621,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   let recipeUnsub = null;
   let calendarUnsub = null;
   let priceTierUnsub = null;
+  let purchaseVendorUnsub = null;
   window.onSumokLogin = function(){
     if(!window.SumokFB) return;
     // 지금까지는 "엑셀 파일을 열어야만" 탭 메뉴·본문이 보였다. 공과금처럼 엑셀 없이도
@@ -4688,6 +4879,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     }, (err)=>{
       toast('가격별 메뉴 실시간 연동 오류: ' + (err.message || err.code || ''), true);
     });
+
+    // 매입 거래처(공급처) — 이름이 수정될 수 있어 자동 생성 문서ID를 rowNum으로 쓴다.
+    const purchaseVendorQ = query(collection(db, 'purchaseVendors'));
+    purchaseVendorUnsub = onSnapshot(purchaseVendorQ, (snap)=>{
+      DATA.purchaseVendors = snap.docs.map(d=>{
+        const v = d.data();
+        return { rowNum: d.id, name: v.name||'', phone: v.phone||'-', contact: v.contact||'-', note: v.note||'-' };
+      }).filter(x=>x.name).sort((a,b)=> a.name.localeCompare(b.name,'ko'));
+      renderPurchaseVendorTab();
+    }, (err)=>{
+      toast('매입 거래처 실시간 연동 오류: ' + (err.message || err.code || ''), true);
+    });
   };
   window.onSumokLogout = function(){
     if(utilityUnsub){ utilityUnsub(); utilityUnsub = null; }
@@ -4703,8 +4906,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if(recipeUnsub){ recipeUnsub(); recipeUnsub = null; }
     if(calendarUnsub){ calendarUnsub(); calendarUnsub = null; }
     if(priceTierUnsub){ priceTierUnsub(); priceTierUnsub = null; }
+    if(purchaseVendorUnsub){ purchaseVendorUnsub(); purchaseVendorUnsub = null; }
     DATA.vendors = [];
     renderVendorTab();
+    DATA.purchaseVendors = [];
+    renderPurchaseVendorTab();
     DATA.companyInfo = {};
     loadCompanyInfoForm();
     DATA.inventoryItems = [];
