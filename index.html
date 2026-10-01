@@ -5509,7 +5509,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   if(els.settlementGenerateBtn) els.settlementGenerateBtn.addEventListener('click', async () => {
-    if(!currentWB){ toast('먼저 엑셀 파일을 열어주세요.', true); return; }
     const monthStr = els.settlementMonth.value;
     if(!monthStr){ toast('월을 선택해 주세요.', true); return; }
     const scope = els.settlementScope ? els.settlementScope.value : 'all';
@@ -5525,36 +5524,43 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.settlementPrintBtn.disabled = false;
     els.settlementPrintBtn.dataset.ready = '1';
 
-    // write/refresh a dedicated sheet in the workbook for HQ submission
-    // (별도 시트로, 범위별로 이름을 구분해서 두 버전이 서로 덮어쓰지 않게 한다)
-    const scopeSuffix = scope === 'ext' ? '(외부매출만)' : '(전체)';
-    const sheetName = SETTLEMENT_PREFIX + data.y + '년' + data.m + '월' + scopeSuffix;
-    if(currentWB.Sheets[sheetName]) delete currentWB.Sheets[sheetName];
-    if(!currentWB.SheetNames.includes(sheetName)) currentWB.SheetNames.push(sheetName);
-    const settlementCols = SETTLEMENT_COLS[scope] || SETTLEMENT_COLS.all;
-    const settlementCatTotals = settlementCols.map(c => data.rows.reduce((s,r)=> s + r[c.key], 0));
-    const aoa = [
-      [`${data.y}년 ${data.m}월 매출 정산서 (본사 제출용)`],
-      [],
-      ['날짜', ...settlementCols.map(c=>c.label), '일 합계'],
-      ...data.rows.map(r=>[r.date, ...settlementCols.map(c=>r[c.key]), r.settleTotal]),
-      ['합계', ...settlementCatTotals, data.totalSales],
-      [],
-      ['정산 대상 매출액', data.totalSales],
-      ['본사 로열티 (6%)', data.commission],
-      ['최종 정산액', data.settlement],
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    for(let i=0;i<data.rows.length;i++){
-      const addr = XLSX.utils.encode_cell({r:3+i, c:0});
-      if(ws[addr]) ws[addr] = {t:'d', v:data.rows[i].date, z:'yyyy-mm-dd'};
-    }
-    currentWB.Sheets[sheetName] = ws;
+    // 엑셀 파일이 열려 있을 때만 '덤으로' 백업 시트를 추가 저장한다.
+    // (매출 데이터 자체는 이미 Firestore에서 집계됐으므로, 파일이 없어도
+    //  정산서 미리보기/인쇄는 항상 가능해야 한다 — 엑셀 저장은 선택사항.)
+    if(currentWB){
+      // 별도 시트로, 범위별로 이름을 구분해서 두 버전이 서로 덮어쓰지 않게 한다
+      const scopeSuffix = scope === 'ext' ? '(외부매출만)' : '(전체)';
+      const sheetName = SETTLEMENT_PREFIX + data.y + '년' + data.m + '월' + scopeSuffix;
+      if(currentWB.Sheets[sheetName]) delete currentWB.Sheets[sheetName];
+      if(!currentWB.SheetNames.includes(sheetName)) currentWB.SheetNames.push(sheetName);
+      const settlementCols = SETTLEMENT_COLS[scope] || SETTLEMENT_COLS.all;
+      const settlementCatTotals = settlementCols.map(c => data.rows.reduce((s,r)=> s + r[c.key], 0));
+      const aoa = [
+        [`${data.y}년 ${data.m}월 매출 정산서 (본사 제출용)`],
+        [],
+        ['날짜', ...settlementCols.map(c=>c.label), '일 합계'],
+        ...data.rows.map(r=>[r.date, ...settlementCols.map(c=>r[c.key]), r.settleTotal]),
+        ['합계', ...settlementCatTotals, data.totalSales],
+        [],
+        ['정산 대상 매출액', data.totalSales],
+        ['본사 로열티 (6%)', data.commission],
+        ['최종 정산액', data.settlement],
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      for(let i=0;i<data.rows.length;i++){
+        const addr = XLSX.utils.encode_cell({r:3+i, c:0});
+        if(ws[addr]) ws[addr] = {t:'d', v:data.rows[i].date, z:'yyyy-mm-dd'};
+      }
+      currentWB.Sheets[sheetName] = ws;
 
-    const result = await saveWorkbook();
-    const ok = reportSaveResult(result, `'${sheetName}' 정산서 시트가 생성/갱신되었습니다.`);
-    els.settlementStatus.textContent = ok ? '✓ 시트 저장 완료 — 아래에서 미리보기 후 인쇄하세요.' : '✗ 저장 실패';
-    els.settlementStatus.style.color = ok ? 'var(--good)' : 'var(--stamp)';
+      const result = await saveWorkbook();
+      const ok = reportSaveResult(result, `'${sheetName}' 정산서 시트가 생성/갱신되었습니다.`);
+      els.settlementStatus.textContent = ok ? '✓ 시트 저장 완료 — 아래에서 미리보기 후 인쇄하세요.' : '✗ 엑셀 저장 실패 (미리보기는 정상입니다)';
+      els.settlementStatus.style.color = ok ? 'var(--good)' : 'var(--stamp)';
+    } else {
+      els.settlementStatus.textContent = '✓ 미리보기 생성 완료 — 아래에서 인쇄하세요. (엑셀 파일을 열면 백업용 시트도 함께 저장됩니다)';
+      els.settlementStatus.style.color = 'var(--good)';
+    }
     els.settlementPreviewWrap.scrollIntoView({behavior:'smooth', block:'start'});
   });
 
