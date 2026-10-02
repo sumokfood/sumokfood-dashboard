@@ -41,6 +41,7 @@
   button.load-btn:active{transform:scale(0.97);}
   button.load-btn.secondary{background:transparent; color:var(--muted); border:1.5px solid var(--line); font-weight:700;}
   button.load-btn.secondary:hover{background:var(--paper); color:var(--text);}
+  button.load-btn.secondary.active{background:var(--ink); color:#fff; border-color:var(--ink);}
   input[type=file]{display:none;}
 
   .tabbar{
@@ -245,6 +246,14 @@
   .cal-cell.blank-day:hover .cd-add{opacity:1;}
   .cal-cell .cd-date{font-weight:800; color:var(--ink); font-size:13px; margin-bottom:4px;}
   .cal-cell.today{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold-soft) inset;}
+  .cal-cell.select-mode{cursor:pointer;}
+  .cal-cell.blank-day.select-mode{opacity:.5; cursor:not-allowed;}
+  .cal-cell.blank-day.select-mode:hover{box-shadow:none; border-color:var(--line);}
+  .cal-cell.blank-day.select-mode:hover .cd-add{opacity:0;}
+  .cal-cell.selected{border-color:var(--gold-2); background:var(--gold-soft, #F3E9D2); box-shadow:0 0 0 2px var(--gold-2) inset;}
+  .cal-select-bar{display:flex; align-items:center; gap:10px; margin:-4px 0 12px; padding:9px 12px; background:var(--paper-2); border:1px dashed var(--gold-2); border-radius:4px; flex-wrap:wrap;}
+  .cal-select-bar .csb-hint{font-size:12px; color:var(--muted);}
+  .cal-select-bar .csb-count{margin-left:auto; font-weight:800; color:var(--gold-2); font-size:12.5px;}
   .day-edit-input{
     width:100%; border:1px solid var(--line); border-radius:3px; padding:8px 10px; font-size:13px;
     font-family:inherit; background:#fff; color:var(--text); margin-top:3px;
@@ -1332,7 +1341,14 @@
         <button class="load-btn secondary" id="cateringCalPrevBtn">◀ 이전달</button>
         <div style="font-weight:800; font-size:15px; color:var(--ink); min-width:100px; text-align:center;" id="cateringCalMonthLabel"></div>
         <button class="load-btn secondary" id="cateringCalNextBtn">다음달 ▶</button>
-        <button class="load-btn secondary" id="cateringCalTodayBtn" style="margin-left:auto;">오늘</button>
+        <button class="load-btn secondary" id="cateringCalSelectModeBtn" style="margin-left:auto;">🖨️ 날짜 선택 인쇄</button>
+        <button class="load-btn secondary" id="cateringCalTodayBtn">오늘</button>
+      </div>
+      <div class="cal-select-bar" id="cateringCalSelectBar" style="display:none;">
+        <span class="csb-hint">인쇄할 날짜를 캘린더에서 클릭해 선택하세요 — 한 페이지에 최대 3일씩 담깁니다.</span>
+        <span class="csb-count" id="cateringCalSelectCount">0일 선택됨</span>
+        <button class="load-btn secondary" id="cateringCalSelectClearBtn" style="font-size:11.5px; padding:6px 12px;">선택 해제</button>
+        <button class="load-btn" id="cateringCalSelectPrintBtn" style="font-size:11.5px; padding:6px 12px;" disabled>선택한 날짜 인쇄</button>
       </div>
       <div class="cal-legend" id="cateringCalLegend"></div>
       <div class="cal-grid" id="cateringCalGrid"></div>
@@ -1670,6 +1686,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'cateringTotal','cateringNote','cateringSubmit','cateringStatus','cateringTableWrap',
    'cateringImportBtn','cateringImportStatus','cateringHistorySearch','cateringHistoryCount',
    'cateringCalPrevBtn','cateringCalNextBtn','cateringCalTodayBtn','cateringCalMonthLabel','cateringCalLegend','cateringCalGrid',
+   'cateringCalSelectModeBtn','cateringCalSelectBar','cateringCalSelectCount','cateringCalSelectClearBtn','cateringCalSelectPrintBtn',
    'cateringFormTitle','cateringCancelEditBtn','vendorDatalist',
    'vendorCountLabel','vendorSearch','vendorAddBtn','vendorTable',
    'resIngResSelect','resIngWrap','resIngSummaryWrap',
@@ -6715,6 +6732,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   /* ---------------- 예약 현황 캘린더 (도시락·케이터링 납품 기록을 달력으로) ---------------- */
   let cateringCalYear, cateringCalMonth;
+  let cateringCalSelectMode = false;
+  const cateringCalSelectedDates = new Set(); // dkey 문자열("y-m-d", m은 0-based) 모음 — 달이 바뀌어도 유지된다
   function cateringTypeColor(type){ return type === '케이터링' ? '#1F3B2C' : '#C6A05F'; }
   const cateringDkey = dt => dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate();
 
@@ -6741,12 +6760,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const isToday = cellDate.toDateString() === todayStr;
       const recs = (byDate[cateringDkey(cellDate)] || []).slice().sort((a,b)=> b.total - a.total);
       if(recs.length === 0){
-        html += `<div class="cal-cell blank-day ${isToday?'today':''}" data-date="${d}"><div class="cd-date">${d}</div><div class="cd-add">+ 예약 추가</div></div>`;
+        html += `<div class="cal-cell blank-day ${isToday?'today':''} ${cateringCalSelectMode?'select-mode':''}" data-date="${d}"><div class="cd-date">${d}</div><div class="cd-add">+ 예약 추가</div></div>`;
         continue;
       }
       const totalCount = recs.reduce((s,r)=>s+r.count,0);
       const shown = recs.slice(0,3);
-      html += `<div class="cal-cell ${isToday?'today':''}" data-date="${d}">
+      const isSelected = cateringCalSelectedDates.has(cateringDkey(cellDate));
+      html += `<div class="cal-cell ${isToday?'today':''} ${cateringCalSelectMode?'select-mode':''} ${isSelected?'selected':''}" data-date="${d}">
         <div class="cd-date">${d} <span style="float:right; font-size:9px; color:var(--gold-2); font-weight:700;">${recs.length}건·${totalCount}인</span></div>
         <div class="cd-items">
           ${shown.map(r=>`<div class="cd-item"><span class="cd-dot" style="background:${cateringTypeColor(r.type)}"></span>${escapeHtml(r.vendor)}</div>`).join('')}
@@ -6758,7 +6778,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.cateringCalGrid.querySelectorAll('.cal-cell:not(.empty)').forEach(cell=>{
       cell.addEventListener('click', ()=>{
         const d = +cell.dataset.date;
-        openCateringDayModal(new Date(cateringCalYear, cateringCalMonth, d));
+        const cellDate = new Date(cateringCalYear, cateringCalMonth, d);
+        if(cateringCalSelectMode){
+          if(cell.classList.contains('blank-day')) return; // 예약 없는 날은 인쇄할 게 없어 선택 제외
+          const k = cateringDkey(cellDate);
+          if(cateringCalSelectedDates.has(k)) cateringCalSelectedDates.delete(k);
+          else cateringCalSelectedDates.add(k);
+          renderCateringCalendar();
+          updateCateringCalSelectBar();
+          return;
+        }
+        openCateringDayModal(cellDate);
       });
     });
     if(els.cateringCalLegend) els.cateringCalLegend.innerHTML = `
@@ -6766,6 +6796,27 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <span class="cl-item"><span class="cl-dot" style="background:${cateringTypeColor('케이터링')}"></span>케이터링</span>
     `;
   }
+
+  function updateCateringCalSelectBar(){
+    if(!els.cateringCalSelectBar) return;
+    els.cateringCalSelectBar.style.display = cateringCalSelectMode ? 'flex' : 'none';
+    if(els.cateringCalSelectCount) els.cateringCalSelectCount.textContent = `${cateringCalSelectedDates.size}일 선택됨`;
+    if(els.cateringCalSelectPrintBtn) els.cateringCalSelectPrintBtn.disabled = cateringCalSelectedDates.size === 0;
+  }
+  if(els.cateringCalSelectModeBtn) els.cateringCalSelectModeBtn.addEventListener('click', ()=>{
+    cateringCalSelectMode = !cateringCalSelectMode;
+    els.cateringCalSelectModeBtn.classList.toggle('active', cateringCalSelectMode);
+    els.cateringCalSelectModeBtn.textContent = cateringCalSelectMode ? '✕ 선택 모드 끄기' : '🖨️ 날짜 선택 인쇄';
+    if(!cateringCalSelectMode) cateringCalSelectedDates.clear();
+    renderCateringCalendar();
+    updateCateringCalSelectBar();
+  });
+  if(els.cateringCalSelectClearBtn) els.cateringCalSelectClearBtn.addEventListener('click', ()=>{
+    cateringCalSelectedDates.clear();
+    renderCateringCalendar();
+    updateCateringCalSelectBar();
+  });
+  if(els.cateringCalSelectPrintBtn) els.cateringCalSelectPrintBtn.addEventListener('click', printSelectedCateringDays);
 
   // 납품 메뉴는 "제육볶음 도시락, 계란말이, 배추김치"처럼 쉼표로 구분된 한 줄 텍스트라,
   // 인쇄용 식단표(도시락 식단표)처럼 항목별로 한 줄씩 나뉘어 보이도록 쪼갠다.
@@ -6834,6 +6885,87 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   function printCateringMenuAll(recs){
     document.getElementById('printArea').innerHTML = buildCateringMenuAllPrintHTML(recs);
     els.recipeModal.classList.remove('active');
+    window.print();
+  }
+
+  // ---- 예약 현황 캘린더: 여러 날짜를 골라 한 페이지당 최대 3일씩 모아 인쇄 ----
+  // (날짜별로 1페이지씩이 아니라, 3일을 한 장에 세로로 쌓아 담고, 4일째부터는
+  //  다음 장으로 넘어가는 방식. 페이지 안에 담긴 예약 건수/메뉴 줄 수 총합에
+  //  맞춰 글자 크기를 비례 축소해서 항상 그 장 안에 들어오게 한다.)
+  function cateringDayBlockRowCount(dateObj){
+    const recs = (DATA.cateringLog||[]).filter(r => cateringDkey(r.date) === cateringDkey(dateObj));
+    if(recs.length === 0) return 2; // 날짜 제목 + "예약 없음" 한 줄
+    return 1 + recs.reduce((sum,r) => {
+      const items = String(r.menu||'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean);
+      return sum + 1 + (items.length || 1);
+    }, 0);
+  }
+  function buildCateringDayBlockHTML(dateObj, sizes){
+    const {fontPx, headPx, dateHeadPx, padV, gapPx} = sizes;
+    const recs = (DATA.cateringLog||[]).filter(r => cateringDkey(r.date) === cateringDkey(dateObj)).sort((a,b)=> b.total - a.total);
+    const dateStr = dateObj.toLocaleDateString('ko-KR', {month:'long', day:'numeric', weekday:'long'});
+    const dateHeadHtml = `<div style="font-weight:800; font-size:${dateHeadPx}px; color:var(--ink); border-bottom:2px solid var(--gold-2); padding-bottom:4px; margin-bottom:6px;">
+      ${dateStr}${recs.length ? `<span style="font-weight:600; color:var(--muted); font-size:${fontPx}px;"> · ${recs.length}건·${recs.reduce((s,r)=>s+r.count,0)}인</span>` : ''}
+    </div>`;
+    if(recs.length === 0){
+      return `<div style="margin-bottom:${gapPx}px;">${dateHeadHtml}<div style="color:var(--muted); font-size:${fontPx}px; padding:4px 2px;">예약된 납품 기록이 없습니다.</div></div>`;
+    }
+    const blocks = recs.map(r => ({
+      rec: r,
+      items: (String(r.menu||'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean)) || []
+    })).map(b => ({...b, items: b.items.length ? b.items : ['-']}));
+    const sections = blocks.map(b => {
+      const r = b.rec;
+      return `
+        <div style="margin-bottom:${Math.max(2, Math.round(gapPx*0.5))}px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:${padV}px 10px; background:${cateringTypeColor(r.type)}18; border-left:4px solid ${cateringTypeColor(r.type)}; font-weight:800; font-size:${headPx}px; color:var(--ink);">
+            <span>${escapeHtml(r.vendor)} · ${escapeHtml(r.type)}</span>
+            <span>${r.count.toLocaleString('ko-KR')}인분</span>
+          </div>
+          <table style="width:100%; border-collapse:collapse;">
+            ${b.items.map((it,i)=>`<tr><td style="width:24px; text-align:center; border:1px solid var(--line); padding:${padV}px 6px; font-size:${fontPx}px; color:var(--muted);">${i+1}</td><td style="border:1px solid var(--line); padding:${padV}px 10px; font-size:${fontPx}px;">${escapeHtml(it)}</td></tr>`).join('')}
+          </table>
+        </div>`;
+    }).join('');
+    return `<div style="margin-bottom:${gapPx}px;">${dateHeadHtml}${sections}</div>`;
+  }
+  function buildCateringDaysPageHTML(dateChunk, isFirstPage){
+    const totalRows = dateChunk.reduce((s,d)=> s + cateringDayBlockRowCount(d), 0);
+    const baseRows = 26; // 3일 정도(날짜당 평균 몇 건)까지는 기본 크기로 한 페이지에 여유 있게 들어감
+    const scale = Math.min(1, baseRows / Math.max(totalRows, 1));
+    const sizes = {
+      fontPx: Math.max(8, Math.round(12 * scale)),
+      headPx: Math.max(9, Math.round(12.5 * scale)),
+      dateHeadPx: Math.max(12, Math.round(16 * scale)),
+      padV: Math.max(2, Math.round(7 * scale)),
+      gapPx: Math.max(8, Math.round(16 * scale)),
+    };
+    const titleRange = dateChunk.length > 1
+      ? `${fmtKoreanDate(dateChunk[0])} ~ ${fmtKoreanDate(dateChunk[dateChunk.length-1])}`
+      : fmtKoreanDate(dateChunk[0]);
+    const pageStyle = isFirstPage ? '' : ' style="page-break-before:always;"';
+    return `
+      <div class="print-fill-page"${pageStyle}><div class="a4-sheet">
+        <div class="a4-title">수목Food 예약 현황</div>
+        <div class="a4-date">${titleRange}</div>
+        ${dateChunk.map(d => buildCateringDayBlockHTML(d, sizes)).join('')}
+      </div></div>`;
+  }
+  function buildMultiDayCateringPrintHTML(dates){
+    const chunks = [];
+    for(let i=0; i<dates.length; i+=3) chunks.push(dates.slice(i, i+3));
+    return chunks.map((c,i) => buildCateringDaysPageHTML(c, i===0)).join('');
+  }
+  function cateringCalSortedSelectedDates(){
+    return Array.from(cateringCalSelectedDates).map(k=>{
+      const [y,m,d] = k.split('-').map(Number);
+      return new Date(y,m,d);
+    }).sort((a,b)=> a-b);
+  }
+  function printSelectedCateringDays(){
+    const dates = cateringCalSortedSelectedDates();
+    if(dates.length === 0) return;
+    document.getElementById('printArea').innerHTML = buildMultiDayCateringPrintHTML(dates);
     window.print();
   }
 
