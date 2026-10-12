@@ -290,6 +290,10 @@
   .cal-tbl td.rep{background:#FBE6C4;}
   .cal-tbl td.rep:after{content:" ↻"; color:#A9570C; font-weight:800;}
   .cal-tbl td.hov{background:#E3EFD9; outline:1.5px solid #7FA866; outline-offset:-1.5px;}
+  .cal-tbl td[data-col]{cursor:text;}
+  .cal-tbl td.editing{background:#fff; padding:3px 4px; outline:2px solid var(--gold-2); outline-offset:-2px;}
+  .cal-tbl td.editing:after{content:none;}
+  .cal-cell-input{width:100%; min-width:84px; font:inherit; color:var(--text); border:none; background:transparent; padding:3px 4px; outline:none;}
   .cal-heat{border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; font-size:12.5px;}
   .cal-heat th{background:var(--ink); color:#fff; padding:4px 0; min-width:22px; text-align:center; font-size:10.5px; position:sticky; top:0; z-index:2;}
   .cal-heat th.we,.cal-heat td.we{background-color:#EFE8D3;}
@@ -1271,6 +1275,7 @@
       </div>
       <div class="cal-legend" id="calLegend"></div>
       <div class="cal-grid" id="calGrid"></div>
+      <p id="calTableHint" hidden style="font-size:12px; color:var(--muted); margin:0 0 8px;">메뉴 칸을 누르면 그 자리에서 바로 수정됩니다. <b>Enter</b> 저장 후 아래 칸으로 이동 · <b>Esc</b> 취소 · 날짜를 누르면 하루 전체를 수정할 수 있습니다.</p>
       <div class="cal-tbl-wrap" id="calTableWrap" hidden><table class="cal-tbl" id="calTable"></table></div>
       <div id="calRepeatWrap" hidden>
         <div class="cal-view-bar" id="calRepGroups" style="margin-bottom:6px;"></div>
@@ -3262,6 +3267,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   /* ---- 보기 방식: 달력 / 표 / 반복 확인 ---- */
   let calViewMode = 'cal', calRepN = 3, calRepKimchi = false, calRepGroup = 'all', calRepAll = false;
+  let calPendingFocus = null; // 표에서 Enter로 저장한 뒤 아래 칸을 바로 이어서 수정하기 위한 표시
   const CAL_DAY_MS = 86400000;
   const calDayNum = d => Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / CAL_DAY_MS);
   const calMD = d => `${d.getMonth()+1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`;
@@ -3302,6 +3308,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.calGrid.hidden = calViewMode !== 'cal';
     if(els.calLegend) els.calLegend.hidden = calViewMode === 'repeat';
     if(els.calTableWrap) els.calTableWrap.hidden = calViewMode !== 'table';
+    const tblHint = document.getElementById('calTableHint'); if(tblHint) tblHint.hidden = calViewMode !== 'table';
     if(els.calRepeatWrap) els.calRepeatWrap.hidden = calViewMode !== 'repeat';
     if(calViewMode === 'table') drawCalTable(sheet);
     else if(calViewMode === 'repeat') drawCalRepeat(sheet);
@@ -3310,6 +3317,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   function drawCalTable(sheet){
+    // 다른 사람의 수정이나 방금 한 저장 때문에 표가 다시 그려져도, 지금 입력 중이던 칸과 글자는 그대로 이어간다
+    const liveInp = els.calTable.querySelector('td.editing input');
+    const keep = liveInp ? {date: liveInp.closest('td').dataset.date, col: liveInp.closest('td').dataset.col, value: liveInp.value, pos: liveInp.selectionStart} : null;
     const rows = sheet.rows.slice().sort((a,b)=> a.dateObj - b.dateObj);
     const occ = calBuildOccurrences(sheet);
     const cols = sheet.cols.map(c => ({label: String(c.header).replace(CIRCLED,'').trim(), group: c.group}));
@@ -3325,14 +3335,31 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           if(near.length){ cls += ' rep'; tip = near.map(o=>calMD(o.date)).join(', ') + '에도 나옴'; }
         }
         const k = (c.group === '밥' || !v) ? '' : calKey(v);
-        return `<td class="${cls}" data-k="${escapeAttrVal(k)}" title="${escapeAttrVal(tip)}">${escapeHtml(v)}</td>`;
+        return `<td class="${cls}" data-k="${escapeAttrVal(k)}" data-val="${escapeAttrVal(v)}" data-date="${toInputDate(r.dateObj)}" data-col="${escapeAttrVal(c.label)}" data-group="${escapeAttrVal(c.group||'')}" title="${escapeAttrVal(tip ? tip + ' · 클릭해서 수정' : '클릭해서 수정')}">${escapeHtml(v)}</td>`;
       }).join('') + '</tr>';
     });
     els.calTable.innerHTML = h + '</tbody>';
-    els.calTable.querySelectorAll('td[data-date]').forEach(td => td.addEventListener('click', () => {
+    // 날짜 칸: 하루 전체를 수정 창으로 / 메뉴 칸: 그 자리에서 바로 수정
+    els.calTable.querySelectorAll('td:first-child[data-date]').forEach(td => td.addEventListener('click', () => {
       const [y,m,d] = td.dataset.date.split('-').map(Number);
       openDayEditor(currentCalSheetIdx, new Date(y, m-1, d));
     }));
+    els.calTable.querySelectorAll('td[data-col]').forEach(td => td.addEventListener('click', e => {
+      if(e.target.closest('input')) return;
+      startCalCellEdit(td, sheet);
+    }));
+    if(calPendingFocus){
+      const pf = calPendingFocus; calPendingFocus = null;
+      const next = [...els.calTable.querySelectorAll('td[data-col]')].find(t => t.dataset.date === pf.date && t.dataset.col === pf.col);
+      if(next){ next.scrollIntoView({block:'nearest'}); startCalCellEdit(next, sheet); }
+    } else if(keep){
+      const back = [...els.calTable.querySelectorAll('td[data-col]')].find(t => t.dataset.date === keep.date && t.dataset.col === keep.col);
+      if(back){
+        startCalCellEdit(back, sheet);
+        const bi = back.querySelector('input');
+        if(bi){ bi.value = keep.value; try{ bi.setSelectionRange(keep.pos, keep.pos); }catch(e){} bi.dispatchEvent(new Event('input')); }
+      }
+    }
     els.calTable.querySelectorAll('td[data-k]').forEach(td => {
       td.addEventListener('mouseenter', () => {
         const k = td.dataset.k; if(!k) return;
@@ -3340,6 +3367,89 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       });
       td.addEventListener('mouseleave', () => els.calTable.querySelectorAll('.hov').forEach(o => o.classList.remove('hov')));
     });
+  }
+
+  // 표의 메뉴 칸을 그 자리에서 수정한다. Enter=저장하고 아래 칸으로, Esc=취소, 다른 곳을 누르거나 Tab=저장.
+  function startCalCellEdit(td, sheet){
+    if(td.querySelector('input')) return;
+    const wantDate = td.dataset.date, wantCol = td.dataset.col;
+    // 다른 칸이 아직 수정 중이면 그 칸부터 저장하고 닫는다(한 번에 한 칸만 수정)
+    els.calTable.querySelectorAll('td.editing').forEach(o => { if(o !== td && o._finish) o._finish(true, 0); });
+    // 저장 결과로 표가 다시 그려졌다면 눌렀던 칸이 새로 만들어졌으니 같은 칸을 다시 찾는다
+    if(!td.isConnected){
+      td = [...els.calTable.querySelectorAll('td[data-col]')].find(t => t.dataset.date === wantDate && t.dataset.col === wantCol);
+      if(!td) return;
+    }
+    const [y,m,d] = td.dataset.date.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    const label = td.dataset.col, group = td.dataset.group, old = td.dataset.val || '';
+    td.classList.add('editing');
+    td.innerHTML = `<input type="text" class="cal-cell-input" value="${escapeAttrVal(old)}" placeholder="메뉴 입력"><div class="mf-warn"></div>`;
+    const inp = td.querySelector('input'), warn = td.querySelector('.mf-warn');
+    const occ = calBuildOccurrences(sheet, dateObj);
+    const showWarn = () => {
+      const v = inp.value.trim();
+      if(!v || !calEligible(group, v)){ warn.textContent = ''; return; }
+      const near = calNear(occ, calKey(v), dateObj, calRepN);
+      warn.textContent = near.length ? `⚠ ${near.map(o=>calMD(o.date)).join(', ')}에도 나와요` : '';
+    };
+    showWarn();
+    inp.focus(); inp.select();
+    let done = false;
+    const rows = [...els.calTable.querySelectorAll('tbody tr')];
+    const finish = (commit, step) => {
+      if(done) return; done = true;
+      const nv = inp.value.trim();
+      // 아래(또는 위) 칸으로 이어서 수정할 때 쓸 목표 칸
+      if(step){
+        const idx = rows.indexOf(td.parentElement) + step;
+        const tgt = rows[idx] && rows[idx].querySelector(`td[data-col="${CSS.escape(label)}"]`);
+        if(tgt) calPendingFocus = {date: tgt.dataset.date, col: label};
+      }
+      td.classList.remove('editing');
+      if(!commit || nv === old){
+        td.textContent = old;
+        if(calPendingFocus){ const pf = calPendingFocus; calPendingFocus = null; const nx = els.calTable.querySelector(`td[data-col="${CSS.escape(pf.col)}"][data-date="${pf.date}"]`); if(nx) startCalCellEdit(nx, sheet); }
+        return;
+      }
+      td.textContent = nv; // 저장 결과가 클라우드에서 돌아올 때까지 바로 보여준다
+      td.dataset.val = nv;
+      saveCalCell(sheet, dateObj, label, nv);
+      if(calPendingFocus){ // 표가 다시 그려지지 않는 경우(오프라인 등)를 대비한 안전장치
+        setTimeout(() => {
+          if(!calPendingFocus) return;
+          const pf = calPendingFocus; calPendingFocus = null;
+          const nx = els.calTable.querySelector(`td[data-col="${CSS.escape(pf.col)}"][data-date="${pf.date}"]`);
+          if(nx) startCalCellEdit(nx, sheet);
+        }, 1500);
+      }
+    };
+    td._finish = finish;
+    inp.addEventListener('input', showWarn);
+    inp.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ e.preventDefault(); finish(true, e.shiftKey ? -1 : 1); }
+      else if(e.key === 'Escape'){ e.preventDefault(); finish(false, 0); }
+    });
+    inp.addEventListener('blur', () => finish(true, 0));
+  }
+
+  // 이 날짜의 items를 sheet.cols 순서로 다시 만들어 그 날짜 하나만 갱신한다(수정 창과 같은 방식).
+  async function saveCalCell(sheet, dateObj, label, newValue){
+    if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+    const row = sheet.rows.find(r => sameDay(r.dateObj, dateObj));
+    if(!row) return;
+    const items = sheet.cols.map(c => {
+      const lab = String(c.header).replace(CIRCLED,'').trim();
+      const it = row.items.find(x => x.label === lab);
+      return {label: lab, group: c.group, value: lab === label ? newValue : (it ? String(it.value||'') : '')};
+    }).filter(it => it.value);
+    try{
+      await window.SumokFB.updateDoc(calendarSheetDocRef(sheet.rowNum), { [`days.${toInputDate(dateObj)}`]: { items } });
+      toast(`${calMD(dateObj)} ${label} 저장했습니다.`);
+    }catch(err){
+      toast('저장 실패: ' + (err.message || err.code || ''), true);
+      if(DATA.calendarSheets.length) drawCalendar(currentCalSheetIdx);
+    }
   }
 
   function drawCalRepeat(sheet){
