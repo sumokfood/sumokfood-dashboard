@@ -271,6 +271,16 @@
   .cal-cell .cd-item.cd-main-item{color:var(--ink); font-weight:700; font-size:11px;}
 
   /* 월간 식단 캘린더: 보기 방식 전환(달력/표/반복 확인) */
+  /* 매입 캘린더: 날짜 눌러서 영수증 없는 매입 기입 */
+  .pd-form{margin-top:14px; padding:12px 14px 14px; background:#FBF8EF; border:1px dashed var(--gold-2); border-radius:4px;}
+  .pd-form h4{margin:0 0 10px; font-size:14px; color:var(--ink);}
+  .pd-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px;}
+  .pd-f{display:flex; flex-direction:column; gap:3px; font-size:12px; font-weight:700; color:var(--ink-2); min-width:0;}
+  .pd-f.pd-wide{grid-column:1/-1;}
+  .pd-f .day-edit-input{margin-top:0;}
+  .pd-del{margin-left:10px; font:inherit; font-size:11px; color:var(--stamp); background:none; border:1px solid var(--line); border-radius:3px; padding:1px 7px; cursor:pointer;}
+  .pd-del:hover{background:#fff; border-color:var(--stamp);}
+  @media (max-width:520px){ .pd-grid{grid-template-columns:1fr;} }
   #tab-calendar [hidden]{display:none !important;}
   .cal-view-bar{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-bottom:12px;}
   .cal-view-bar .cvb-ctl{display:flex; gap:6px 14px; align-items:center; font-size:12.5px; color:var(--muted); flex-wrap:wrap;}
@@ -932,7 +942,7 @@
         <div class="chart-card"><h3>거래처 TOP10</h3><div class="chart-wrap"><canvas id="chartVendor"></canvas></div></div>
       </div>
 
-      <div class="section-title" style="margin-top:36px;"><h2>일별 매입 캘린더</h2><span class="sub">날짜를 클릭하면 그날 구매내역이 팝업으로 나옵니다</span></div>
+      <div class="section-title" style="margin-top:36px;"><h2>일별 매입 캘린더</h2><span class="sub">날짜를 클릭하면 그날 구매내역이 나오고, 영수증이 없는 매입은 같은 창에서 바로 기입할 수 있습니다</span></div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <button class="load-btn secondary" id="purchaseCalPrevBtn">◀ 이전달</button>
         <div style="font-weight:800; font-size:15px; color:var(--ink); min-width:100px; text-align:center;" id="purchaseCalMonthLabel"></div>
@@ -4970,7 +4980,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const isToday = cellDate.toDateString() === todayStr;
       const recs = byDate[purchaseDkey(cellDate)] || [];
       if(recs.length === 0){
-        html += `<div class="cal-cell blank-day ${isToday?'today':''}" data-date="${d}"><div class="cd-date">${d}</div></div>`;
+        html += `<div class="cal-cell blank-day ${isToday?'today':''}" data-date="${d}" style="cursor:pointer;"><div class="cd-date">${d}</div><div class="cd-add">+ 매입 기입</div></div>`;
         continue;
       }
       const total = recs.reduce((s,r)=>s+r.amount,0);
@@ -4983,7 +4993,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>`;
     }
     els.purchaseCalGrid.innerHTML = html;
-    els.purchaseCalGrid.querySelectorAll('.cal-cell:not(.empty):not(.blank-day)').forEach(cell=>{
+    // 매입이 없는 날짜도 눌러서 바로 기입할 수 있게 모든 날짜 칸이 클릭된다
+    els.purchaseCalGrid.querySelectorAll('.cal-cell:not(.empty)').forEach(cell=>{
       cell.addEventListener('click', ()=>{
         const d = +cell.dataset.date;
         openPurchaseDayModal(new Date(purchaseCalYear, purchaseCalMonth, d));
@@ -4991,30 +5002,131 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     });
   }
 
+  // 날짜를 누르면 그날 매입 목록과, 영수증이 없는 매입을 바로 적는 서식이 함께 열린다.
+  // 저장 형식은 영수증 붙여넣기와 똑같아서(purchaseLog) 매입 분석·그래프·상세내역에 그대로 합쳐진다.
   function openPurchaseDayModal(dateObj){
-    const recs = (FIN.detailRows||[]).filter(r => r.date && purchaseDkey(r.date) === purchaseDkey(dateObj))
-      .sort((a,b)=> b.amount - a.amount);
     const dateStr = dateObj.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
-    const total = recs.reduce((s,r)=>s+r.amount,0);
-    const rowsHtml = recs.length ? recs.map(r => `
-      <div class="modal-field" style="border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-          <strong style="color:var(--ink);">${escapeHtml(r.rawItem)}</strong>
-          <span style="font-weight:800; color:var(--gold-2);">${fmtWon(r.amount)}원</span>
-        </div>
-        <div class="mf-value">${escapeHtml(r.category)} · ${escapeHtml(r.vendor)} · 단가 ${fmtWon(r.price)}원 × ${fmtWon(r.qty)}</div>
-      </div>
-    `).join('') : '<p style="color:var(--muted); font-size:13px;">이 날짜엔 매입 기록이 없습니다.</p>';
+    const dayRecs = () => (FIN.detailRows||[]).filter(r => r.date && purchaseDkey(r.date) === purchaseDkey(dateObj)).sort((a,b)=> b.amount - a.amount);
+    const vendorNames = [...new Set([...(DATA.purchaseVendors||[]).map(v=>v.name), ...Array.from(FIN.vendorSet||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+    const cats = [...new Set([...(FIN.categorySet ? Array.from(FIN.categorySet) : []), ...(FIN.detailRows||[]).map(r=>r.category)].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+    const recentItems = [...new Map((FIN.detailRows||[]).slice().sort((a,b)=>b.date-a.date).map(r=>[r.rawItem, r])).values()].slice(0, 800);
+    const opts = arr => arr.map(v=>`<option value="${escapeAttrVal(v)}"></option>`).join('');
+
     els.modalBody.innerHTML = `
       <h3>${dateStr}</h3>
-      <div class="modal-cat">총 ${recs.length}건 · 합계 ${fmtWon(total)}원</div>
-      ${rowsHtml}
-      <div class="modal-form-actions">
-        <button class="load-btn secondary" id="purchaseDayModalCloseBtn">닫기</button>
+      <div class="modal-cat" id="pdSummary"></div>
+      <div id="pdList"></div>
+      <div class="pd-form">
+        <h4>➕ 영수증 없는 매입 기입</h4>
+        <div class="pd-grid">
+          <label class="pd-f">일자<input type="date" id="pd_date" class="day-edit-input" value="${toInputDate(dateObj)}"></label>
+          <label class="pd-f">구입처<input type="text" id="pd_vendor" class="day-edit-input" list="pdVendors" placeholder="거래처 선택 또는 입력"></label>
+          <label class="pd-f">분류<input type="text" id="pd_category" class="day-edit-input" list="pdCats" placeholder="예: 농산물(채소류)"></label>
+          <label class="pd-f">과세구분<select id="pd_tax" class="day-edit-input"><option value="과세">과세</option><option value="면세">면세</option></select></label>
+          <label class="pd-f pd-wide">품목<input type="text" id="pd_item" class="day-edit-input" list="pdItems" placeholder="품목명과 규격 (예: 양파 15kg) — 전에 산 품목은 고르면 자동으로 채워집니다"></label>
+          <label class="pd-f">단가(원)<input type="number" id="pd_price" class="day-edit-input" min="0" step="any" inputmode="decimal"></label>
+          <label class="pd-f">수량<input type="number" id="pd_qty" class="day-edit-input" min="0" step="any" inputmode="decimal" value="1"></label>
+          <label class="pd-f">총액(원) <small id="pd_totalHint" style="color:var(--muted); font-weight:500;">단가×수량 자동</small><input type="number" id="pd_total" class="day-edit-input" min="0" step="any" inputmode="decimal"></label>
+          <label class="pd-f">메모<input type="text" id="pd_memo" class="day-edit-input" value="영수증 없음"></label>
+        </div>
+        <datalist id="pdVendors">${opts(vendorNames)}</datalist>
+        <datalist id="pdCats">${opts(cats)}</datalist>
+        <datalist id="pdItems">${opts(recentItems.map(r=>r.rawItem))}</datalist>
       </div>
-    `;
+      <div class="modal-form-actions" style="align-items:center;">
+        <div class="save-status" id="pdStatus" style="margin-right:auto;"></div>
+        <button class="load-btn secondary" id="pdCloseBtn" type="button">닫기</button>
+        <button class="submit-btn confirm" id="pdSaveBtn" type="button">저장 후 이어서 입력</button>
+      </div>`;
     els.recipeModal.classList.add('active');
-    document.getElementById('purchaseDayModalCloseBtn').addEventListener('click', ()=> els.recipeModal.classList.remove('active'));
+
+    const $ = id => document.getElementById(id);
+    const statusEl = $('pdStatus');
+    const anchorEl = $('pd_date');
+    function renderList(){
+      if(!anchorEl.isConnected) return; // 그 사이 창이 닫히거나 다른 날짜 창으로 바뀌었으면 그리지 않는다
+      const recs = dayRecs(), total = recs.reduce((s,r)=>s+r.amount,0);
+      $('pdSummary').textContent = recs.length ? `총 ${recs.length}건 · 합계 ${fmtWon(total)}원` : '이 날짜엔 아직 매입 기록이 없습니다.';
+      $('pdList').innerHTML = recs.map(r => `
+        <div class="modal-field" style="border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <strong style="color:var(--ink);">${escapeHtml(r.rawItem)}</strong>
+            <span style="font-weight:800; color:var(--gold-2); white-space:nowrap;">${fmtWon(r.amount)}원</span>
+          </div>
+          <div class="mf-value">${escapeHtml(r.category)} · ${escapeHtml(r.vendor)} · 단가 ${fmtWon(r.price)}원 × ${fmtWon(r.qty)}
+            ${r.id ? `<button type="button" class="pd-del" data-id="${escapeAttrVal(r.id)}" title="이 매입 내역 삭제">삭제</button>` : ''}</div>
+        </div>`).join('');
+      $('pdList').querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', async () => {
+        if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+        if(!confirm('이 매입 내역을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        try{
+          await window.SumokFB.deleteDoc(window.SumokFB.doc(window.SumokFB.db, 'purchaseLog', b.dataset.id));
+          statusEl.textContent = '✓ 삭제했습니다.'; statusEl.style.color = 'var(--good)';
+          setTimeout(renderList, 500);
+        }catch(err){ statusEl.textContent = '✗ 삭제 실패: ' + (err.message || err.code || ''); statusEl.style.color = 'var(--stamp)'; }
+      }));
+    }
+    renderList();
+
+    // 총액은 단가×수량으로 자동 계산하되, 직접 고치면 그 값을 따른다
+    let totalDirty = false;
+    const calcTotal = () => {
+      if(totalDirty) return;
+      const p = parseFloat($('pd_price').value), q = parseFloat($('pd_qty').value);
+      $('pd_total').value = (isFinite(p) && isFinite(q)) ? Math.round(p * q) : '';
+    };
+    $('pd_price').addEventListener('input', calcTotal);
+    $('pd_qty').addEventListener('input', calcTotal);
+    $('pd_total').addEventListener('input', () => { totalDirty = $('pd_total').value !== ''; $('pd_totalHint').textContent = totalDirty ? '직접 입력' : '단가×수량 자동'; if(!totalDirty) calcTotal(); });
+
+    // 전에 샀던 품목을 고르면 분류·과세구분·구입처·단가를 이전 기록에서 채운다(비어 있는 칸만)
+    $('pd_item').addEventListener('change', () => {
+      const hit = recentItems.find(r => r.rawItem === $('pd_item').value.trim());
+      if(!hit) return;
+      if(!$('pd_category').value) $('pd_category').value = hit.category || '';
+      if(!$('pd_vendor').value) $('pd_vendor').value = hit.vendor || '';
+      if(!$('pd_price').value && hit.price) { $('pd_price').value = hit.price; calcTotal(); }
+    });
+
+    let dupConfirmed = false;
+    $('pdCloseBtn').addEventListener('click', () => els.recipeModal.classList.remove('active'));
+    $('pdSaveBtn').addEventListener('click', async () => {
+      if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
+      const dv = $('pd_date').value, vendor = $('pd_vendor').value.trim(), category = $('pd_category').value.trim(), item = $('pd_item').value.trim();
+      const price = parseFloat($('pd_price').value), qty = parseFloat($('pd_qty').value);
+      const total = $('pd_total').value !== '' ? parseFloat($('pd_total').value) : (isFinite(price) && isFinite(qty) ? Math.round(price*qty) : NaN);
+      const missing = [];
+      if(!dv) missing.push('일자'); if(!vendor) missing.push('구입처'); if(!category) missing.push('분류'); if(!item) missing.push('품목');
+      if(!isFinite(price)) missing.push('단가'); if(!isFinite(qty) || qty <= 0) missing.push('수량');
+      if(missing.length){ statusEl.textContent = '⚠ ' + missing.join(', ') + '을(를) 입력해 주세요.'; statusEl.style.color = 'var(--stamp)'; return; }
+      const [y,m,d] = dv.split('-').map(Number);
+      const date = new Date(y, m-1, d);
+      // 같은 날·구입처·품목·금액이 이미 있으면 한 번 더 확인한다
+      if(!dupConfirmed && findDuplicatePurchase({date, item, vendor, total})){
+        dupConfirmed = true;
+        statusEl.textContent = '⚠ 같은 내역이 이미 있습니다. 그래도 저장하려면 한 번 더 눌러 주세요.'; statusEl.style.color = 'var(--stamp)';
+        return;
+      }
+      dupConfirmed = false;
+      const btn = $('pdSaveBtn'); btn.disabled = true;
+      statusEl.textContent = '저장 중...'; statusEl.style.color = 'var(--muted)';
+      try{
+        const { db, collection, addDoc, Timestamp } = window.SumokFB;
+        await addDoc(collection(db, 'purchaseLog'), {
+          date: Timestamp.fromDate(date), category, item, vendor,
+          tax: $('pd_tax').value, price, qty, total, memo: $('pd_memo').value.trim() || '-',
+        });
+        statusEl.textContent = `✓ 저장했습니다: ${item} ${fmtWon(total)}원`; statusEl.style.color = 'var(--good)';
+        refreshCostCalcIngredientList();
+        // 이어서 입력: 일자·구입처·분류·과세구분·메모는 남기고 품목·금액만 비운다
+        $('pd_item').value = ''; $('pd_price').value = ''; $('pd_qty').value = '1'; $('pd_total').value = ''; totalDirty = false; $('pd_totalHint').textContent = '단가×수량 자동';
+        $('pd_item').focus();
+        setTimeout(renderList, 600); setTimeout(renderList, 1800); // 클라우드에서 새 목록이 돌아오는 시간 차이 대비
+      }catch(err){
+        statusEl.textContent = '✗ 저장 실패: ' + (err.message || err.code || ''); statusEl.style.color = 'var(--stamp)';
+      }
+      btn.disabled = false;
+    });
   }
 
   if(els.purchaseCalPrevBtn) els.purchaseCalPrevBtn.addEventListener('click', ()=>{
