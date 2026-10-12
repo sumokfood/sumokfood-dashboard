@@ -270,6 +270,40 @@
   .cal-cell .cd-item .cd-dot{width:6px; height:6px; border-radius:50%; flex-shrink:0;}
   .cal-cell .cd-item.cd-main-item{color:var(--ink); font-weight:700; font-size:11px;}
 
+  /* 월간 식단 캘린더: 보기 방식 전환(달력/표/반복 확인) */
+  #tab-calendar [hidden]{display:none !important;}
+  .cal-view-bar{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-bottom:12px;}
+  .cal-view-bar .cvb-ctl{display:flex; gap:6px 14px; align-items:center; font-size:12.5px; color:var(--muted); flex-wrap:wrap;}
+  .cal-view-bar .cvb-ctl label{display:flex; gap:5px; align-items:center;}
+  .cal-view-bar select{font-family:inherit; font-size:12.5px; border:1px solid var(--line); border-radius:3px; padding:4px 7px; background:#fff; color:var(--text);}
+  .cal-cell .cd-date .cd-rep{float:right; font-size:9.5px; color:var(--stamp); font-weight:800;}
+  .cal-cell .cd-sub{font-size:10.2px; color:var(--muted); line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .cal-cell.same-main{background:#E7EFDD; border-color:#7FA866;}
+  .cal-tbl-wrap{overflow:auto; max-height:620px; border:1px solid var(--line); border-radius:4px; background:var(--paper-2);}
+  .cal-tbl{border-collapse:separate; border-spacing:0; width:100%; font-size:12.5px;}
+  .cal-tbl th,.cal-tbl td{padding:6px 9px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); text-align:left; min-width:92px; vertical-align:top;}
+  .cal-tbl th{background:var(--ink); color:#fff; position:sticky; top:0; z-index:2; white-space:nowrap;}
+  .cal-tbl td:first-child,.cal-tbl th:first-child{position:sticky; left:0; z-index:1; min-width:72px; white-space:nowrap; font-weight:700; background:#EFE8D3; color:var(--ink); cursor:pointer;}
+  .cal-tbl th:first-child{background:var(--ink); color:#fff; z-index:3; cursor:default;}
+  .cal-tbl tr.we td:first-child{color:var(--stamp);}
+  .cal-tbl td.muted{color:var(--muted);}
+  .cal-tbl td.rep{background:#FBE6C4;}
+  .cal-tbl td.rep:after{content:" ↻"; color:#A9570C; font-weight:800;}
+  .cal-tbl td.hov{background:#E3EFD9; outline:1.5px solid #7FA866; outline-offset:-1.5px;}
+  .cal-heat{border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; font-size:12.5px;}
+  .cal-heat th{background:var(--ink); color:#fff; padding:4px 0; min-width:22px; text-align:center; font-size:10.5px; position:sticky; top:0; z-index:2;}
+  .cal-heat th.we,.cal-heat td.we{background-color:#EFE8D3;}
+  .cal-heat th.we{background:#6B5A2C;}
+  .cal-heat th:first-child,.cal-heat td:first-child{min-width:200px; text-align:left; padding-left:9px; position:sticky; left:0; z-index:1;}
+  .cal-heat th:first-child{background:var(--ink); z-index:3;}
+  .cal-heat td{padding:0; min-width:22px; height:28px; text-align:center; border-bottom:1px solid var(--line); border-right:1px solid var(--line);}
+  .cal-heat td:first-child{padding:3px 9px; background:var(--paper-2); color:var(--ink); font-weight:600;}
+  .cal-heat td:first-child small{display:block; color:var(--muted); font-weight:500; font-size:10.5px;}
+  .cal-heat td.on{cursor:pointer;}
+  .cal-heat td.on:after{content:""; display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--gc); vertical-align:middle;}
+  .cal-heat td.on.close:after{box-shadow:0 0 0 2px #fff, 0 0 0 4px #D98A2B;}
+  .mf-warn{font-size:11.5px; color:#A9570C; font-weight:700; margin-top:3px;}
+
   /* Print views */
   .print-tools{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px;}
   .print-panel{
@@ -1217,8 +1251,32 @@
         <button class="load-btn secondary" id="calendarImportBtn">📥 엑셀에서 식단표 가져오기</button>
       </div>
       <div class="save-status" id="calendarImportStatus" style="margin-bottom:10px;"></div>
+      <div class="cal-view-bar">
+        <div class="pt-price-toggle" id="calViewToggle">
+          <button class="pt-price-toggle-btn active" data-view="cal">달력</button>
+          <button class="pt-price-toggle-btn" data-view="table">표 (날짜별 비교)</button>
+          <button class="pt-price-toggle-btn" data-view="repeat">반복 확인</button>
+        </div>
+        <div class="cvb-ctl" id="calRepCtl">
+          <label>같은 메뉴 반복 표시
+            <select id="calRepN">
+              <option value="2">±2일 이내</option>
+              <option value="3" selected>±3일 이내</option>
+              <option value="5">±5일 이내</option>
+              <option value="0">끄기</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="calRepKimchi"> 김치 포함</label>
+        </div>
+      </div>
       <div class="cal-legend" id="calLegend"></div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-tbl-wrap" id="calTableWrap" hidden><table class="cal-tbl" id="calTable"></table></div>
+      <div id="calRepeatWrap" hidden>
+        <div class="cal-view-bar" id="calRepGroups" style="margin-bottom:6px;"></div>
+        <p style="font-size:12px; color:var(--muted); margin:0 0 8px;">두 번 이상 나온 메뉴만 보여줍니다. 주황 테두리는 이틀 이하 간격으로 또 나온 날이고, 점을 누르면 그 날짜를 수정할 수 있습니다.</p>
+        <div class="cal-tbl-wrap"><table class="cal-heat" id="calHeat"></table></div>
+      </div>
     </div>
 
     <!-- ===================== 식단: 가격별 도시락 메뉴 ===================== -->
@@ -1704,7 +1762,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    'billVendorSelect','billStartDate','billEndDate','billDocType','billGenerateBtn','billPrintBtn','billStatus','billPreviewWrap',
    'pricetierCountLabel','pricetierGroups','pricetierPrintTarget','pricetierPrintBtn','pricetierPreviewWrap',
    'pricetierImportBtn','pricetierImportStatus',
-   'calLegend',
+   'calLegend','calViewToggle','calRepCtl','calRepN','calRepKimchi','calTableWrap','calTable','calRepeatWrap','calRepGroups','calHeat',
    'ptmenuCountLabel','ptmenuPriceToggle','ptmenuGroups','ptmenuPrintTarget','ptmenuPrintBtn','ptmenuPreviewWrap',
    'ptmenuGroupPrintBtn','ptmenuAllPrintBtn',
    'invItemSearch','invCatFilter','invReseedBtn','invAddItemBtn','invItemTable','invItemCountLabel',
@@ -3202,7 +3260,133 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     }
   }
 
+  /* ---- 보기 방식: 달력 / 표 / 반복 확인 ---- */
+  let calViewMode = 'cal', calRepN = 3, calRepKimchi = false, calRepGroup = 'all', calRepAll = false;
+  const CAL_DAY_MS = 86400000;
+  const calDayNum = d => Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / CAL_DAY_MS);
+  const calMD = d => `${d.getMonth()+1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`;
+  const calKey = v => normWs(v);
+  // 반복 비교 대상: 값이 있고, 밥은 매일 같아서 제외, 김치는 옵션
+  function calEligible(group, value){
+    if(!String(value||'').trim()) return false;
+    if(group === '밥') return false;
+    if(group === '김치' && !calRepKimchi) return false;
+    return true;
+  }
+  // 메뉴 → 나온 날짜들. skipDate를 주면 그 날짜는 뺀다(수정 중인 날의 입력값과 비교할 때).
+  function calBuildOccurrences(sheet, skipDate){
+    const occ = new Map();
+    sheet.rows.forEach(r => {
+      if(skipDate && sameDay(r.dateObj, skipDate)) return;
+      r.items.forEach(it => {
+        if(!calEligible(it.group, it.value)) return;
+        const k = calKey(it.value);
+        if(!occ.has(k)) occ.set(k, []);
+        occ.get(k).push({n: calDayNum(r.dateObj), date: r.dateObj});
+      });
+    });
+    occ.forEach(a => a.sort((x,y)=>x.n-y.n));
+    return occ;
+  }
+  function calNear(occ, key, dateObj, N){
+    if(!N) return [];
+    const n = calDayNum(dateObj);
+    return (occ.get(key)||[]).filter(o => o.n !== n && Math.abs(o.n - n) <= N);
+  }
+
   function drawCalendar(sheetIdx){
+    const sheet = DATA.calendarSheets[sheetIdx];
+    if(!sheet) return;
+    if(els.calViewToggle) els.calViewToggle.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === calViewMode));
+    if(els.calRepCtl) els.calRepCtl.style.display = calViewMode === 'repeat' ? 'none' : '';
+    els.calGrid.hidden = calViewMode !== 'cal';
+    if(els.calLegend) els.calLegend.hidden = calViewMode === 'repeat';
+    if(els.calTableWrap) els.calTableWrap.hidden = calViewMode !== 'table';
+    if(els.calRepeatWrap) els.calRepeatWrap.hidden = calViewMode !== 'repeat';
+    if(calViewMode === 'table') drawCalTable(sheet);
+    else if(calViewMode === 'repeat') drawCalRepeat(sheet);
+    else drawCalendarGrid(sheetIdx);
+    renderCalLegend(sheet);
+  }
+
+  function drawCalTable(sheet){
+    const rows = sheet.rows.slice().sort((a,b)=> a.dateObj - b.dateObj);
+    const occ = calBuildOccurrences(sheet);
+    const cols = sheet.cols.map(c => ({label: String(c.header).replace(CIRCLED,'').trim(), group: c.group}));
+    let h = '<thead><tr><th>날짜</th>' + cols.map(c=>`<th>${escapeHtml(c.label)}</th>`).join('') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+      const we = r.dateObj.getDay() === 0 || r.dateObj.getDay() === 6;
+      h += `<tr class="${we?'we':''}"><td data-date="${toInputDate(r.dateObj)}">${calMD(r.dateObj)}</td>` + cols.map(c => {
+        const it = r.items.find(x => x.label === c.label);
+        const v = it ? String(it.value||'') : '';
+        let cls = (c.group === '밥' || c.group === '김치') ? 'muted' : '', tip = '';
+        if(it && calEligible(c.group, v)){
+          const near = calNear(occ, calKey(v), r.dateObj, calRepN);
+          if(near.length){ cls += ' rep'; tip = near.map(o=>calMD(o.date)).join(', ') + '에도 나옴'; }
+        }
+        const k = (c.group === '밥' || !v) ? '' : calKey(v);
+        return `<td class="${cls}" data-k="${escapeAttrVal(k)}" title="${escapeAttrVal(tip)}">${escapeHtml(v)}</td>`;
+      }).join('') + '</tr>';
+    });
+    els.calTable.innerHTML = h + '</tbody>';
+    els.calTable.querySelectorAll('td[data-date]').forEach(td => td.addEventListener('click', () => {
+      const [y,m,d] = td.dataset.date.split('-').map(Number);
+      openDayEditor(currentCalSheetIdx, new Date(y, m-1, d));
+    }));
+    els.calTable.querySelectorAll('td[data-k]').forEach(td => {
+      td.addEventListener('mouseenter', () => {
+        const k = td.dataset.k; if(!k) return;
+        els.calTable.querySelectorAll('td[data-k]').forEach(o => o.classList.toggle('hov', o.dataset.k === k));
+      });
+      td.addEventListener('mouseleave', () => els.calTable.querySelectorAll('.hov').forEach(o => o.classList.remove('hov')));
+    });
+  }
+
+  function drawCalRepeat(sheet){
+    const rows = sheet.rows.slice().sort((a,b)=> a.dateObj - b.dateObj);
+    if(!rows.length){ els.calHeat.innerHTML = ''; return; }
+    const y = rows[0].dateObj.getFullYear(), m = rows[0].dateObj.getMonth();
+    const dim = new Date(y, m+1, 0).getDate();
+    const dishes = new Map();
+    rows.forEach(r => r.items.forEach(it => {
+      if(!calEligible(it.group, it.value)) return;
+      if(calRepGroup !== 'all' && it.group !== calRepGroup) return;
+      if(calRepGroup === 'all' && it.group === '김치') return; // 전체 보기에서는 김치를 따로 둔다(필터로 선택)
+      const k = calKey(it.value);
+      if(!dishes.has(k)) dishes.set(k, {name: String(it.value).trim(), group: it.group, days: new Set()});
+      dishes.get(k).days.add(r.dateObj.getDate());
+    }));
+    let list = [...dishes.values()].filter(d => d.days.size >= 2).map(d => {
+      const ds = [...d.days].sort((a,b)=>a-b);
+      return {...d, ds, gap: Math.min(...ds.slice(1).map((x,i)=>x-ds[i]))};
+    });
+    list.sort((a,b)=> b.ds.length - a.ds.length || a.gap - b.gap || a.name.localeCompare(b.name,'ko'));
+    const total = list.length;
+    if(!calRepAll) list = list.slice(0, 16);
+
+    const groupsPresent = GROUP_ORDER.filter(g => g !== '밥' && sheet.cols.some(c => c.group === g));
+    els.calRepGroups.innerHTML = `<span style="font-size:12.5px; color:var(--muted);">항목</span>` +
+      [['all','전체'], ...groupsPresent.map(g=>[g,g])].map(([k,t]) => `<button type="button" class="load-btn secondary${calRepGroup===k?' active':''}" data-rg="${escapeAttrVal(k)}" style="font-size:12px; padding:5px 11px;">${escapeHtml(t)}</button>`).join('') +
+      `<button type="button" class="load-btn secondary" id="calRepAllBtn" style="font-size:12px; padding:5px 11px; margin-left:auto;">${calRepAll ? '상위 16개만 보기' : `전체 펼치기 (${total}개)`}</button>`;
+    els.calRepGroups.querySelectorAll('[data-rg]').forEach(b => b.addEventListener('click', () => { calRepGroup = b.dataset.rg; drawCalRepeat(sheet); }));
+    document.getElementById('calRepAllBtn').addEventListener('click', () => { calRepAll = !calRepAll; drawCalRepeat(sheet); });
+
+    const present = new Set(rows.map(r => r.dateObj.getDate()));
+    const dowOf = d => new Date(y, m, d).getDay();
+    let h = '<thead><tr><th>메뉴 (횟수 · 최단 간격)</th>' + Array.from({length:dim}, (_,i)=>i+1).map(d=>`<th class="${[0,6].includes(dowOf(d))?'we':''}">${d}</th>`).join('') + '</tr></thead><tbody>';
+    if(!list.length) h += `<tr><td colspan="${dim+1}" style="padding:18px; color:var(--muted);">두 번 이상 나온 메뉴가 없습니다.</td></tr>`;
+    list.forEach(r => {
+      h += `<tr style="--gc:${groupColor(r.group)}"><td>${escapeHtml(r.name)}<small>${r.ds.length}회 · 최단 ${r.gap}일 간격</small></td>` +
+        Array.from({length:dim}, (_,i)=>i+1).map(d => {
+          const on = r.ds.includes(d), close = on && r.ds.some(o => o !== d && Math.abs(o-d) <= 2);
+          return `<td class="${[0,6].includes(dowOf(d))?'we':''} ${on?'on':''} ${close?'close':''}" ${on?`data-d="${d}" title="${m+1}/${d}"`:''}></td>`;
+        }).join('') + '</tr>';
+    });
+    els.calHeat.innerHTML = h + '</tbody>';
+    els.calHeat.querySelectorAll('td.on').forEach(td => td.addEventListener('click', () => openDayEditor(currentCalSheetIdx, new Date(y, m, +td.dataset.d))));
+  }
+
+  function drawCalendarGrid(sheetIdx){
     const sheet = DATA.calendarSheets[sheetIdx];
     if(!sheet) return;
     const rows = sheet.rows;
@@ -3223,6 +3407,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     rows.forEach(r => { byDate[dkey(r.dateObj)] = r; });
 
     const todayStr = new Date().toDateString();
+    const occ = calBuildOccurrences(sheet);
     let html = ['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
     for(let i=0;i<firstDow;i++) html += '<div class="cal-cell empty"></div>';
     for(let d=1; d<=daysInMonth; d++){
@@ -3235,12 +3420,23 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       }
       const filled = rowData.items.filter(it => it.value !== null && it.value !== undefined && String(it.value).trim() !== '');
       const mainItem = filled.find(it=>it.group==='메인요리') || filled.find(it=>it.group==='국/찌개');
-      const others = filled.filter(it=>it!==mainItem).slice(0,4);
-      html += `<div class="cal-cell ${isToday?'today':''}" data-date="${d}">
-        <div class="cd-date">${d}</div>
+      const soupItem = filled.find(it=>it.group==='국/찌개' && it!==mainItem);
+      const sideN = filled.filter(it=>it.group==='반찬').length;
+      const saladItem = filled.find(it=>it.group==='샐러드');
+      // 이 날 메인이 같은 달 안에서 몇 번 나오는지, 최근 며칠 안에 또 나오는지
+      let repBadge = '';
+      if(mainItem && calEligible(mainItem.group, mainItem.value)){
+        const same = occ.get(calKey(mainItem.value)) || [];
+        const near = calNear(occ, calKey(mainItem.value), cellDate, calRepN);
+        if(near.length) repBadge = `<span class="cd-rep" title="${escapeAttrVal(near.map(o=>calMD(o.date)).join(', '))}에도 나옴">↻ ${calMD(near[0].date).split('(')[0]}</span>`;
+        else if(same.length > 1) repBadge = `<span class="cd-rep" style="color:var(--gold-2);" title="이 달에 ${same.length}회">메인 ${same.length}회</span>`;
+      }
+      html += `<div class="cal-cell ${isToday?'today':''}" data-date="${d}" data-mainkey="${mainItem?escapeAttrVal(calKey(mainItem.value)):''}">
+        <div class="cd-date">${d}${repBadge}</div>
         <div class="cd-items">
           ${mainItem?`<div class="cd-item cd-main-item"><span class="cd-dot" style="background:${groupColor(mainItem.group)}"></span>${escapeHtml(String(mainItem.value))}</div>`:''}
-          ${others.map(it=>`<div class="cd-item"><span class="cd-dot" style="background:${groupColor(it.group)}"></span>${escapeHtml(String(it.value))}</div>`).join('')}
+          ${soupItem?`<div class="cd-item"><span class="cd-dot" style="background:${groupColor(soupItem.group)}"></span>${escapeHtml(String(soupItem.value))}</div>`:''}
+          ${(sideN||saladItem)?`<div class="cd-sub">${sideN?`반찬 ${sideN}`:''}${sideN&&saladItem?' · ':''}${saladItem?escapeHtml(String(saladItem.value)):''}</div>`:''}
         </div>
       </div>`;
     }
@@ -3251,6 +3447,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         const dateObj = new Date(year, month, d);
         openDayEditor(sheetIdx, dateObj);
       });
+      // 같은 메인이 나온 다른 날을 한눈에 — 칸에 마우스를 올리면 초록으로 표시
+      const mk = cell.dataset.mainkey;
+      if(mk){
+        cell.addEventListener('mouseenter', () => els.calGrid.querySelectorAll('.cal-cell[data-mainkey]').forEach(o => { if(o !== cell && o.dataset.mainkey === mk) o.classList.add('same-main'); }));
+        cell.addEventListener('mouseleave', () => els.calGrid.querySelectorAll('.same-main').forEach(o => o.classList.remove('same-main')));
+      }
     });
     renderCalLegend(sheet);
   }
@@ -3280,7 +3482,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const val = existingItem ? String(existingItem.value) : '';
       return `<div class="modal-field">
         <div class="mf-label">${escapeHtml(label)}</div>
-        <input type="text" class="day-edit-input" data-colidx="${c.idx}" value="${escapeAttrVal(val)}" placeholder="메뉴 입력">
+        <input type="text" class="day-edit-input" data-colidx="${c.idx}" data-group="${escapeAttrVal(c.group||'')}" value="${escapeAttrVal(val)}" placeholder="메뉴 입력">
+        <div class="mf-warn" data-warn="${c.idx}"></div>
       </div>`;
     }).join('');
 
@@ -3294,6 +3497,21 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
     `;
     els.recipeModal.classList.add('active');
+
+    // 입력하는 즉시, 가까운 날(±N일)에 같은 메뉴가 있으면 알려준다. 이 날짜 자신은 빼고 비교한다.
+    const warnOcc = calBuildOccurrences(sheet, dateObj);
+    function updateRepeatWarn(inp){
+      const box = els.modalBody.querySelector(`[data-warn="${inp.dataset.colidx}"]`);
+      if(!box) return;
+      const v = inp.value.trim();
+      if(!v || !calEligible(inp.dataset.group, v)){ box.textContent = ''; return; }
+      const near = calNear(warnOcc, calKey(v), dateObj, calRepN);
+      box.textContent = near.length ? `⚠ ${near.map(o=>calMD(o.date)).join(', ')}에도 나와요 (±${calRepN}일 이내)` : '';
+    }
+    els.modalBody.querySelectorAll('.day-edit-input').forEach(inp => {
+      updateRepeatWarn(inp);
+      inp.addEventListener('input', () => updateRepeatWarn(inp));
+    });
 
     document.getElementById('dayEditSaveBtn').addEventListener('click', async () => {
       if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
@@ -3326,6 +3544,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+  // 보기 방식 전환·반복 기준 컨트롤
+  if(els.calViewToggle) els.calViewToggle.addEventListener('click', e => {
+    const b = e.target.closest('[data-view]'); if(!b) return;
+    calViewMode = b.dataset.view;
+    if(DATA.calendarSheets.length) drawCalendar(currentCalSheetIdx);
+  });
+  if(els.calRepN) els.calRepN.addEventListener('change', () => { calRepN = +els.calRepN.value; if(DATA.calendarSheets.length) drawCalendar(currentCalSheetIdx); });
+  if(els.calRepKimchi) els.calRepKimchi.addEventListener('change', () => { calRepKimchi = els.calRepKimchi.checked; if(DATA.calendarSheets.length) drawCalendar(currentCalSheetIdx); });
   function escapeAttrVal(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
   // 엑셀의 식단표 시트를 Firestore로 가져온다. 매달 새 시트가 생기는 워크플로라 이 버튼은
