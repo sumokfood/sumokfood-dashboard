@@ -739,9 +739,55 @@
   button.load-btn.preview-btn:hover{background:var(--ink);}
   button.load-btn:disabled{background:#c9c2ac; color:#8a8471; cursor:not-allowed;}
 
+  /* ===== 앱 시작 화면(로고 범퍼 영상) ===== */
+  .app-splash{
+    position:fixed; inset:0; z-index:2000; background:#000; display:flex; align-items:center; justify-content:center;
+    transition:opacity .5s ease; cursor:pointer;
+  }
+  .app-splash.fade{opacity:0; pointer-events:none;}
+  .app-splash video{width:100%; height:100%; object-fit:cover; display:block;}
+  .app-splash .splash-skip{
+    position:absolute; right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+    background:rgba(0,0,0,0.35); color:#E4D3A6; border:1px solid rgba(228,211,166,0.5); border-radius:999px;
+    padding:7px 15px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  }
+  @media print{ .app-splash{display:none !important;} }
+
 </style>
 </head>
 <body>
+
+<!-- 앱 시작 화면: 수목푸드 로고 범퍼 영상(6초). 화면을 누르거나 '건너뛰기'로 바로 넘어간다.
+     같은 창에서는 한 번만 나오고(새로고침 시 생략), 영상을 못 불러오면 바로 넘어간다. -->
+<div class="app-splash" id="appSplash" hidden>
+  <video id="appSplashVideo" muted playsinline preload="auto" disablepictureinpicture></video>
+  <button class="splash-skip" id="appSplashSkip" type="button">건너뛰기</button>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('appSplash'), v = document.getElementById('appSplashVideo');
+  var seen = false; try { seen = sessionStorage.getItem('sumokSplashSeen') === '1'; } catch(e){}
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var web = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (seen || reduce || !web) { el.remove(); return; }
+  try { sessionStorage.setItem('sumokSplashSeen', '1'); } catch(e){}
+  var portrait = window.innerHeight >= window.innerWidth;
+  v.src = portrait ? 'splash/intro-9x16.mp4' : 'splash/intro-16x9.mp4';
+  el.hidden = false;
+  var done = false;
+  function close(delay){
+    if (done) return; done = true;
+    setTimeout(function(){ el.classList.add('fade'); setTimeout(function(){ el.remove(); }, 550); }, delay || 0);
+  }
+  v.addEventListener('ended', function(){ close(350); });
+  v.addEventListener('error', function(){ close(0); });
+  el.addEventListener('click', function(){ close(0); });
+  var p = v.play(); if (p && p.catch) p.catch(function(){ close(0); });
+  // 느린 인터넷 등으로 영상이 시작되지 않으면 오래 붙잡지 않는다
+  setTimeout(function(){ if (v.currentTime === 0) close(0); }, 3000);
+  setTimeout(function(){ close(0); }, 9000);
+})();
+</script>
 
 <div class="login-gate" id="loginGate">
   <div class="login-box">
