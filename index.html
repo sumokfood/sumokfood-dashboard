@@ -753,6 +753,113 @@
   }
   @media print{ .app-splash{display:none !important;} }
 
+  /* ===== 휴대폰 화면(620px 이하) — 하단 메뉴·큰 입력칸·화면 전체 창 ===== */
+  .mnav{display:none;}
+  .phone-only{display:none !important;}
+  .msheet{position:fixed; inset:0; z-index:150; background:rgba(31,59,44,0.55); display:flex; align-items:flex-end;}
+  .msheet[hidden]{display:none;}
+  .msheet-box{background:var(--paper-2); width:100%; max-height:85vh; overflow-y:auto; border-radius:14px 14px 0 0; padding:14px 16px calc(18px + env(safe-area-inset-bottom, 0px)); box-shadow:0 -8px 30px rgba(0,0,0,0.25);}
+  .msheet-head{display:flex; justify-content:space-between; align-items:center; font-size:15px; color:var(--ink);}
+  .msheet-close{background:none; border:none; font-size:30px; line-height:1; color:var(--muted); cursor:pointer; padding:0 4px;}
+  .msheet-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .msheet-group{grid-column:1/-1; font-size:11px; font-weight:800; color:var(--gold-2); letter-spacing:0.5px; margin-top:10px;}
+  .msheet-item{background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 12px; font:inherit; font-size:14px; font-weight:700; color:var(--ink); text-align:left; cursor:pointer;}
+  .msheet-item.on{background:var(--gold-soft); border-color:var(--gold-2);}
+  .msheet-foot{margin-top:16px; padding-top:12px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px;}
+  .msheet-user{font-size:12px; color:var(--muted);}
+  .msheet-foot .load-btn{width:100%; padding:12px; font-size:14px;}
+  .offline-bar{display:none; position:fixed; top:0; left:0; right:0; z-index:1000; background:#A9570C; color:#fff; font-size:12.5px; font-weight:700; text-align:center; line-height:1.5; padding:calc(6px + env(safe-area-inset-top, 0px)) 14px 6px; box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+  body.is-offline .offline-bar{display:block;}
+  .cd-mini{display:none;}
+  .se-date-row{display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap;}
+  .pd-edit{margin-left:10px; font:inherit; font-size:11px; color:var(--ink-2); background:none; border:1px solid var(--line); border-radius:3px; padding:1px 7px; cursor:pointer;}
+  .pd-edit:hover{background:#fff; border-color:var(--ink-2);}
+  /* 식단 목록 보기 · 예약 목록 */
+  .cal-list{display:flex; flex-direction:column; gap:8px;}
+  .cal-list-past{align-self:flex-start;}
+  .cal-day{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--ink); border-radius:6px; padding:10px 13px; cursor:pointer;}
+  .cal-day:hover{border-color:var(--gold-2);}
+  .cal-day.today{border-left-color:var(--gold); box-shadow:0 0 0 2px var(--gold-soft) inset;}
+  .cal-day.past{opacity:0.62;}
+  .cdy-head{display:flex; align-items:center; gap:8px; font-weight:800; color:var(--ink); font-size:14px; margin-bottom:4px;}
+  .cdy-head .we{color:var(--stamp);}
+  .cdy-tag, .cag-today{font-size:11px; background:var(--gold); color:var(--ink); padding:1px 8px; border-radius:10px;}
+  .cdy-rep{margin-left:auto; font-size:11px; color:#A9570C; font-weight:800;}
+  .cdy-main{font-size:15.5px; font-weight:800; color:var(--ink); line-height:1.5;}
+  .cdy-row{font-size:13px; color:var(--ink-2); line-height:1.65;}
+  .cdy-row b{display:inline-block; min-width:42px; color:var(--muted); font-size:11.5px;}
+  .cal-agenda{margin-top:14px;}
+  .cag-title{font-size:13px; font-weight:800; color:var(--ink); margin-bottom:8px;}
+  .cag-day{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:6px; padding:10px 13px; margin-bottom:8px; cursor:pointer;}
+  .cag-day.today{box-shadow:0 0 0 2px var(--gold-soft) inset;}
+  .cag-day.past{opacity:0.6;}
+  .cag-date{display:flex; align-items:center; gap:8px; font-weight:800; color:var(--ink); font-size:14px; margin-bottom:4px;}
+  .cag-sum{margin-left:auto; font-size:11.5px; color:var(--gold-2);}
+  .cag-rec{font-size:13px; color:var(--ink-2); line-height:1.6; padding:3px 0;}
+  .cag-rec + .cag-rec{border-top:1px dashed var(--line);}
+  .cag-menu{font-size:12px; color:var(--muted);}
+  .cag-empty{color:var(--muted); font-size:13px;}
+
+  @media (max-width: 620px){
+    body{padding-bottom:calc(68px + env(safe-area-inset-bottom, 0px));}
+    .pc-only{display:none !important;}
+    .phone-only{display:block !important;}
+    /* 상단바는 한 줄로 줄이고, 백업·엑셀 열기는 [전체] 메뉴로 옮긴다. 위쪽 탭 줄은 하단 메뉴가 대신한다. */
+    .topbar{flex-direction:row; align-items:center; flex-wrap:nowrap; gap:8px; padding:calc(10px + env(safe-area-inset-top, 0px)) 14px 10px;}
+    .brand{min-width:0; flex:1;}
+    .brand-text h1{font-size:14.5px; line-height:1.35;}
+    .brand-text p{display:none;}
+    .file-controls{flex-wrap:nowrap; gap:6px;}
+    .file-controls .status, .login-user-badge, #backupExportBtn, #loadBtn{display:none !important;}
+    .tabbar{display:none !important;}
+    main{padding:16px 12px 28px;}
+    footer{display:none;}
+    .mnav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:90; background:var(--ink); padding:5px 4px calc(5px + env(safe-area-inset-bottom, 0px)); box-shadow:0 -2px 12px rgba(0,0,0,0.22);}
+    .mnav button{flex:1; min-width:0; background:none; border:none; color:#AFC0B3; font:inherit; font-size:11px; font-weight:700; display:flex; flex-direction:column; align-items:center; gap:1px; padding:5px 0 4px; border-radius:8px; cursor:pointer;}
+    .mnav button .mi{font-size:20px; line-height:1.15;}
+    .mnav button.on{color:var(--gold-soft); background:rgba(255,255,255,0.09);}
+    .back-to-top{bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
+    #toastWrap{left:12px; right:12px; bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
+    .toast{max-width:none;}
+    .install-help{bottom:calc(84px + env(safe-area-inset-bottom, 0px));}
+    .section-title .sub{margin-left:0; flex-basis:100%; font-size:11px;}
+    /* 입력칸 글씨는 16px 이상 — 아이폰은 이보다 작으면 입력할 때마다 화면을 확대해 버린다 */
+    input, select, textarea{font-size:16px !important;}
+    /* 창(모달)은 화면 전체를 쓰고, 저장·닫기 버튼은 항상 화면 아래에 붙어 있게 */
+    .modal-overlay{padding:0; align-items:stretch;}
+    .modal-box{max-width:none; max-height:none; height:100%; border-radius:0; padding:calc(18px + env(safe-area-inset-top, 0px)) 16px 0;}
+    .modal-box::after{content:""; display:block; height:20px;}
+    .modal-box .modal-close{position:fixed; top:calc(8px + env(safe-area-inset-top, 0px)); right:10px; z-index:5; width:40px; height:40px; border-radius:50%; background:var(--paper); font-size:26px;}
+    .modal-box h3{padding-right:44px;}
+    .modal-form-actions, .modal-box .form-actions{position:sticky; bottom:0; z-index:4; background:var(--paper-2); margin:14px -16px -20px; padding:10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top:1px solid var(--line); flex-wrap:wrap;}
+    .modal-form-actions > button, .modal-box .form-actions > button{flex:1 1 0; padding:13px 8px; font-size:15px;}
+    .modal-form-actions > .save-status, .modal-box .form-actions > .save-status{flex-basis:100%; margin:0 !important; order:-1;}
+    .pd-del, .pd-edit{padding:6px 12px; font-size:13px;}
+    /* 매출 입력: 항목마다 한 줄, 큰 칸 */
+    .entry-card{padding:16px 14px 18px;}
+    .se-date-row .form-field{flex:1; max-width:none !important;}
+    .se-date-row .load-btn{padding:12px 14px;}
+    .se-row{flex-direction:column; align-items:stretch; gap:8px;}
+    .se-cat{font-size:13px;}
+    .se-field label{min-width:60px; font-size:13px;}
+    .se-field input{padding:11px 12px; text-align:right;}
+    .form-field input, .form-field select{padding:11px 12px;}
+    .form-grid{grid-template-columns:1fr;}
+    .form-actions{flex-wrap:wrap;}
+    .form-actions .save-status{flex-basis:100%;}
+    .form-actions .submit-btn{flex:1; padding:14px; font-size:16px;}
+    /* 달력: 칸은 작게 — 자세한 내용은 날짜를 누르거나 아래 목록에서 본다 */
+    .cal-grid{gap:3px;}
+    .cal-dow{font-size:11px; padding:3px 0;}
+    .cal-cell{min-height:54px; padding:4px 3px 3px; border-radius:6px; overflow:hidden;}
+    .cal-cell .cd-date{font-size:12.5px; margin-bottom:1px;}
+    .cal-cell .cd-items, .cal-cell .cd-sub, .cal-cell .cd-add, .cal-cell .cd-date span{display:none;}
+    .cal-cell .cd-mini{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:10px; line-height:1.3; color:var(--ink-2); font-weight:700;}
+    .cd-mini .cd-dots{display:flex; gap:2px; margin-bottom:1px;}
+    .cd-mini .cd-dots i{width:6px; height:6px; border-radius:50%; display:block;}
+    .pd-today-btn{width:100%; padding:13px; font-size:15px; margin-bottom:10px;}
+  }
+
 </style>
 </head>
 <body>
@@ -811,7 +918,8 @@
     getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
-    getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
+    getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+    collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
     onSnapshot, query, orderBy, Timestamp, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -827,12 +935,42 @@
 
   const fbApp = initializeApp(firebaseConfig);
   const auth = getAuth(fbApp);
-  const db = getFirestore(fbApp);
+  // 오프라인 대응: 받아 온 데이터를 이 기기(IndexedDB)에도 보관해서, 인터넷이 끊겨도 마지막 데이터를 보고
+  // 입력할 수 있게 한다. 끊긴 동안 입력한 내용은 기기에 쌓아 뒀다가 연결되면 Firestore가 알아서 올린다.
+  // (보관이 안 되는 브라우저 — 사생활 보호 모드 등 — 에서는 Firestore가 스스로 메모리만 쓰는 예전 방식으로 돌아간다.)
+  let db;
+  try{
+    db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  }catch(e){
+    console.warn('오프라인 보관 기능을 켜지 못했습니다:', e);
+    db = getFirestore(fbApp);
+  }
+  // 저장 함수의 "완료" 신호는 서버에 닿아야 오기 때문에, 인터넷이 끊긴 채로 저장하면 화면이 "저장 중..."에서 멈춘다.
+  // 오프라인이면 기기에 보관된 것으로 보고 바로 넘어간다(실제 업로드는 연결되면 자동으로 이뤄진다).
+  const whenQueued = (p, value) => {
+    if(navigator.onLine) return p;
+    p.catch(err => console.warn('오프라인 저장분 업로드 실패:', err));
+    return Promise.resolve(value);
+  };
+  const addDocQ = (ref, data) => {
+    if(navigator.onLine) return addDoc(ref, data);
+    const d = doc(ref);
+    return whenQueued(setDoc(d, data), d);
+  };
+  const setDocQ = (...a) => whenQueued(setDoc(...a));
+  const updateDocQ = (...a) => whenQueued(updateDoc(...a));
+  const deleteDocQ = (...a) => whenQueued(deleteDoc(...a));
+  const writeBatchQ = (target) => {
+    const b = writeBatch(target), commit = b.commit.bind(b);
+    b.commit = () => whenQueued(commit());
+    return b;
+  };
   // 메인 대시보드 스크립트는 모듈이 아닌 일반 스크립트라 import를 못 쓴다 —
   // 여기서 만든 Firebase 함수/객체들을 전역 이름표(SumokFB)로 붙여줘서 그쪽에서 꺼내 쓰게 한다.
   window.SumokFB = {
     auth, db, onAuthStateChanged,
-    collection, doc, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy, Timestamp, writeBatch
+    collection, doc, addDoc: addDocQ, updateDoc: updateDocQ, deleteDoc: deleteDocQ, setDoc: setDocQ,
+    onSnapshot, query, orderBy, Timestamp, writeBatch: writeBatchQ
   };
   window.__sumokAuth = auth; // (이전 단계 호환용, SumokFB.auth와 동일)
 
@@ -1022,13 +1160,14 @@
         <div class="chart-card"><h3>거래처 TOP10</h3><div class="chart-wrap"><canvas id="chartVendor"></canvas></div></div>
       </div>
 
-      <div class="section-title" style="margin-top:36px;"><h2>일별 매입 캘린더</h2><span class="sub">날짜를 클릭하면 그날 구매내역이 나오고, 영수증이 없는 매입은 같은 창에서 바로 기입할 수 있습니다</span></div>
+      <div class="section-title" id="purchaseCalSection" style="margin-top:36px;"><h2>일별 매입 캘린더</h2><span class="sub">날짜를 클릭하면 그날 구매내역이 나오고, 영수증이 없는 매입은 같은 창에서 바로 기입할 수 있습니다</span></div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <button class="load-btn secondary" id="purchaseCalPrevBtn">◀ 이전달</button>
         <div style="font-weight:800; font-size:15px; color:var(--ink); min-width:100px; text-align:center;" id="purchaseCalMonthLabel"></div>
         <button class="load-btn secondary" id="purchaseCalNextBtn">다음달 ▶</button>
         <button class="load-btn secondary" id="purchaseCalTodayBtn" style="margin-left:auto;">오늘</button>
       </div>
+      <button class="load-btn phone-only pd-today-btn" id="purchaseTodayAddBtn" type="button">＋ 오늘 매입 기입</button>
       <div class="cal-grid" id="purchaseCalGrid"></div>
 
       <div class="section-title" style="margin-top:36px;"><h2>매입 거래처 관리</h2><span class="sub" id="purchaseVendorCountLabel"></span></div>
@@ -1134,9 +1273,13 @@
       <div class="entry-card">
         <h3>💰 매출 등록</h3>
         <p class="desc">날짜를 고르면 그날 이미 입력된 자료가 있는 경우 자동으로 불러옵니다 — 값을 확인·수정하고 저장하면 됩니다. '판매' 시트에 추가/갱신됩니다.</p>
-        <div class="form-field" style="max-width:200px;">
-          <label for="s_date">날짜 *</label>
-          <input type="date" id="s_date">
+        <div class="se-date-row">
+          <div class="form-field" style="max-width:200px;">
+            <label for="s_date">날짜 *</label>
+            <input type="date" id="s_date">
+          </div>
+          <button type="button" class="load-btn secondary" data-sday="0">오늘</button>
+          <button type="button" class="load-btn secondary" data-sday="-1">어제</button>
         </div>
         <div class="save-status" id="s_date_status" style="margin:6px 0 4px; font-size:12px;"></div>
 
@@ -1348,6 +1491,7 @@
       <div class="cal-view-bar">
         <div class="pt-price-toggle" id="calViewToggle">
           <button class="pt-price-toggle-btn active" data-view="cal">달력</button>
+          <button class="pt-price-toggle-btn" data-view="list">목록</button>
           <button class="pt-price-toggle-btn" data-view="table">표 (날짜별 비교)</button>
           <button class="pt-price-toggle-btn" data-view="repeat">반복 확인</button>
         </div>
@@ -1365,6 +1509,7 @@
       </div>
       <div class="cal-legend" id="calLegend"></div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-list" id="calListWrap" hidden></div>
       <p id="calTableHint" hidden style="font-size:12px; color:var(--muted); margin:0 0 8px;">메뉴 칸을 누르면 그 자리에서 바로 수정됩니다. <b>Enter</b> 저장 후 아래 칸으로 이동 · <b>Esc</b> 취소 · 날짜를 누르면 하루 전체를 수정할 수 있습니다.</p>
       <div class="cal-tbl-wrap" id="calTableWrap" hidden><table class="cal-tbl" id="calTable"></table></div>
       <div id="calRepeatWrap" hidden>
@@ -1499,7 +1644,7 @@
         <table class="change-log-table" id="vendorTable"></table>
       </div>
 
-      <div class="section-title" style="margin-top:34px;"><h2>예약 현황 캘린더</h2><span class="sub">도시락·케이터링 납품 기록을 달력으로 봅니다. 날짜를 클릭하면 상세·추가가 가능합니다.</span></div>
+      <div class="section-title" id="cateringCalSection" style="margin-top:34px;"><h2>예약 현황 캘린더</h2><span class="sub">도시락·케이터링 납품 기록을 달력으로 봅니다. 날짜를 클릭하면 상세·추가가 가능합니다.</span></div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <button class="load-btn secondary" id="cateringCalPrevBtn">◀ 이전달</button>
         <div style="font-weight:800; font-size:15px; color:var(--ink); min-width:100px; text-align:center;" id="cateringCalMonthLabel"></div>
@@ -1515,6 +1660,7 @@
       </div>
       <div class="cal-legend" id="cateringCalLegend"></div>
       <div class="cal-grid" id="cateringCalGrid"></div>
+      <div class="cal-agenda phone-only" id="cateringCalList"></div>
 
       <div class="section-title" style="margin-top:34px;"><h2>예약별 재료 준비 · 장보기</h2><span class="sub">예약 1건을 골라 필요한 재료를 적어두고, 장보기 목록을 인쇄하거나 실제 사용량·비용을 기록하세요.</span></div>
       <div class="recipe-toolbar">
@@ -1770,6 +1916,27 @@
   </div>
 </div>
 
+<!-- 휴대폰 하단 메뉴(620px 이하에서만 보임): 직원들이 휴대폰에서 주로 쓰는 4가지 + 전체 메뉴 -->
+<nav class="mnav" id="mobileNav" aria-label="휴대폰 메뉴">
+  <button type="button" data-go="tab-entry"><span class="mi">💰</span>매출 입력</button>
+  <button type="button" data-go="tab-purchase" data-anchor="purchaseCalSection"><span class="mi">🧾</span>매입 기입</button>
+  <button type="button" data-go="tab-catering" data-anchor="cateringCalSection"><span class="mi">📦</span>예약</button>
+  <button type="button" data-go="tab-calendar"><span class="mi">🍱</span>식단</button>
+  <button type="button" data-sheet><span class="mi">☰</span>전체</button>
+</nav>
+<div class="msheet" id="mobileSheet" hidden>
+  <div class="msheet-box">
+    <div class="msheet-head"><strong>전체 메뉴</strong><button type="button" class="msheet-close" aria-label="닫기">&times;</button></div>
+    <div class="msheet-grid" id="mobileSheetGrid"></div>
+    <div class="msheet-foot">
+      <div class="msheet-user" id="mobileSheetUser"></div>
+      <button type="button" class="load-btn secondary" data-proxy="backupExportBtn">💾 전체 데이터 백업(엑셀)</button>
+      <button type="button" class="load-btn secondary" data-proxy="loadBtn">📂 엑셀 파일 열기</button>
+    </div>
+  </div>
+</div>
+<div class="offline-bar" id="offlineBar" role="status">📴 인터넷 연결이 끊겼습니다 — 지금 입력한 내용은 이 기기에 보관했다가, 연결되면 자동으로 저장됩니다.</div>
+
 <button class="back-to-top" id="backToTopBtn" type="button" title="맨 위로 (탭 메뉴로 이동)">↑</button>
 
 <div id="toastWrap"></div>
@@ -1966,6 +2133,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       // 보이게 된다. 620px 이하일 때만 탭을 누르면 맨 위로 스크롤해서 새 탭 내용이
       // 처음부터 보이게 한다 (데스크톱은 탭바가 계속 보이니 건드리지 않는다).
       if(window.innerWidth <= 620) window.scrollTo({top:0, behavior:'smooth'});
+      syncMobileNav(btn.dataset.tab);
     });
   });
 
@@ -1978,6 +2146,48 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     }, {passive:true});
     backToTopBtn.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
   }
+
+  /* ---------------- 휴대폰 하단 메뉴 ---------------- */
+  // 휴대폰(620px 이하)에서는 위쪽 탭 줄 대신, 직원들이 주로 쓰는 4가지(매출 입력·매입 기입·예약·식단)를
+  // 아래쪽 고정 메뉴로 바로 연다. 나머지 탭은 [전체]에서 고른다. 탭 전환은 기존 탭 버튼을 그대로 누르는 방식.
+  const mobileNav = document.getElementById('mobileNav');
+  const mobileSheet = document.getElementById('mobileSheet');
+  function goTab(tabId, anchorId){
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if(btn) btn.click();
+    const anchor = anchorId && document.getElementById(anchorId);
+    if(anchor) requestAnimationFrame(()=> anchor.scrollIntoView({block:'start'}));
+  }
+  function syncMobileNav(tabId){
+    if(mobileNav) mobileNav.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === tabId));
+  }
+  function openMobileSheet(){
+    const active = document.querySelector('.tab-btn.active');
+    document.getElementById('mobileSheetGrid').innerHTML = [...els.tabBar.children].map(n => {
+      if(n.classList.contains('tab-group-label')) return `<div class="msheet-group">${escapeHtml(n.textContent)}</div>`;
+      if(n.classList.contains('tab-btn')) return `<button type="button" class="msheet-item${n === active ? ' on' : ''}" data-go="${n.dataset.tab}">${escapeHtml(n.textContent.trim())}</button>`;
+      return '';
+    }).join('');
+    const badge = document.getElementById('loginUserBadge');
+    document.getElementById('mobileSheetUser').textContent = badge && badge.textContent ? '로그인: ' + badge.textContent : '';
+    mobileSheet.hidden = false;
+  }
+  if(mobileNav) mobileNav.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    if(b.hasAttribute('data-sheet')) openMobileSheet();
+    else goTab(b.dataset.go, b.dataset.anchor);
+  });
+  if(mobileSheet) mobileSheet.addEventListener('click', e => {
+    const item = e.target.closest('[data-go]'), proxy = e.target.closest('[data-proxy]');
+    if(item || proxy || e.target === mobileSheet || e.target.closest('.msheet-close')) mobileSheet.hidden = true;
+    if(item) goTab(item.dataset.go);
+    if(proxy){ const target = document.getElementById(proxy.dataset.proxy); if(target) target.click(); }
+  });
+  // 엑셀 가져오기 안내·버튼은 PC에서 하는 일이라 휴대폰 화면에서는 접어 둔다(뚝딱레시피처럼 엑셀이 아닌 버튼이 같이 있으면 그대로 둔다)
+  document.querySelectorAll('[id$="ImportBtn"], #purchaseVendorSeedBtn').forEach(b => {
+    const box = b.closest('.note-box');
+    if(box && [...box.querySelectorAll('button')].every(x => /엑셀|매입 내역에서/.test(x.textContent))) box.classList.add('pc-only');
+  });
 
   /* ---------------- File loading (with File System Access API for write-back) ---------------- */
   els.loadBtn.addEventListener('click', openFile);
@@ -3342,11 +3552,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   /* ---------------- Calendar tab ---------------- */
   let currentCalSheetIdx = 0;
+  let calSheetPicked = false; // 직접 식단표를 고르기 전까지는 오늘이 든 식단표를 자동으로 연다
 
   function renderCalendarTab(){
     els.calendarSheetSelect.innerHTML = DATA.calendarSheets.map((s,i)=>`<option value="${i}">[${escapeHtml(s.sheetType)}] ${escapeHtml(s.name)}</option>`).join('');
-    els.calendarSheetSelect.onchange = ()=>{ currentCalSheetIdx = +els.calendarSheetSelect.value; drawCalendar(currentCalSheetIdx); };
+    els.calendarSheetSelect.onchange = ()=>{ currentCalSheetIdx = +els.calendarSheetSelect.value; calSheetPicked = true; drawCalendar(currentCalSheetIdx); };
     if(DATA.calendarSheets.length){
+      if(!calSheetPicked){
+        const now = new Date();
+        let hit = DATA.calendarSheets.findIndex(s => s.rows.some(r => sameDay(r.dateObj, now)));
+        if(hit < 0) hit = DATA.calendarSheets.findIndex(s => s.rows.some(r => r.dateObj.getFullYear() === now.getFullYear() && r.dateObj.getMonth() === now.getMonth()));
+        if(hit >= 0) currentCalSheetIdx = hit;
+      }
       currentCalSheetIdx = Math.min(currentCalSheetIdx, DATA.calendarSheets.length-1);
       els.calendarSheetSelect.value = currentCalSheetIdx;
       drawCalendar(currentCalSheetIdx);
@@ -3356,7 +3573,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   /* ---- 보기 방식: 달력 / 표 / 반복 확인 ---- */
-  let calViewMode = 'cal', calRepN = 3, calRepKimchi = false, calRepGroup = 'all', calRepAll = false;
+  let calViewMode = window.innerWidth <= 620 ? 'list' : 'cal', calRepN = 3, calRepKimchi = false, calRepGroup = 'all', calRepAll = false;
   let calPendingFocus = null; // 표에서 Enter로 저장한 뒤 아래 칸을 바로 이어서 수정하기 위한 표시
   const CAL_DAY_MS = 86400000;
   const calDayNum = d => Math.round(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / CAL_DAY_MS);
@@ -3396,12 +3613,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if(els.calViewToggle) els.calViewToggle.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === calViewMode));
     if(els.calRepCtl) els.calRepCtl.style.display = calViewMode === 'repeat' ? 'none' : '';
     els.calGrid.hidden = calViewMode !== 'cal';
-    if(els.calLegend) els.calLegend.hidden = calViewMode === 'repeat';
+    const calListWrap = document.getElementById('calListWrap');
+    if(calListWrap) calListWrap.hidden = calViewMode !== 'list';
+    if(els.calLegend) els.calLegend.hidden = calViewMode === 'repeat' || calViewMode === 'list';
     if(els.calTableWrap) els.calTableWrap.hidden = calViewMode !== 'table';
     const tblHint = document.getElementById('calTableHint'); if(tblHint) tblHint.hidden = calViewMode !== 'table';
     if(els.calRepeatWrap) els.calRepeatWrap.hidden = calViewMode !== 'repeat';
     if(calViewMode === 'table') drawCalTable(sheet);
     else if(calViewMode === 'repeat') drawCalRepeat(sheet);
+    else if(calViewMode === 'list') drawCalList(sheetIdx);
     else drawCalendarGrid(sheetIdx);
     renderCalLegend(sheet);
   }
@@ -3586,6 +3806,53 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     els.calHeat.querySelectorAll('td.on').forEach(td => td.addEventListener('click', () => openDayEditor(currentCalSheetIdx, new Date(y, m, +td.dataset.d))));
   }
 
+  // 목록 보기(휴대폰 기본): 하루 한 장씩 메뉴 전체를 보여준다. 오늘부터 보여주고, 지난 날짜는 버튼으로 펼친다.
+  let calListShowPast = false;
+  function drawCalList(sheetIdx){
+    const sheet = DATA.calendarSheets[sheetIdx];
+    const wrap = document.getElementById('calListWrap');
+    if(!sheet || !wrap) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const rows = sheet.rows.slice().sort((a,b)=> a.dateObj - b.dateObj);
+    const upcoming = rows.filter(r => r.dateObj >= today);
+    const pastN = upcoming.length ? rows.length - upcoming.length : 0; // 다 지난 식단표면 처음부터 전부 보여준다
+    const shown = (pastN && !calListShowPast) ? upcoming : rows;
+    const occ = calBuildOccurrences(sheet);
+    const ORDER = ['메인요리','국/찌개','반찬','김치','샐러드','밥','기타'];
+    const LABEL = {'메인요리':'메인', '국/찌개':'국', '반찬':'반찬', '김치':'김치', '샐러드':'샐러드', '밥':'밥', '기타':'기타'};
+    let h = pastN ? `<button type="button" class="load-btn secondary cal-list-past" id="calListPastBtn">${calListShowPast ? '지난 날짜 접기' : `지난 날짜 ${pastN}일 보기`}</button>` : '';
+    h += shown.map(r => {
+      const byG = {};
+      r.items.forEach(it => {
+        const v = String(it.value ?? '').trim(); if(!v) return;
+        const g = ORDER.includes(it.group) ? it.group : '기타';
+        (byG[g] = byG[g] || []).push(v);
+      });
+      if(!Object.keys(byG).length) return '';
+      const main = (byG['메인요리'] || [])[0];
+      let rep = '';
+      if(main && calEligible('메인요리', main)){
+        const near = calNear(occ, calKey(main), r.dateObj, calRepN);
+        if(near.length) rep = `<span class="cdy-rep">↻ ${near.map(o => calMD(o.date)).join(', ')}에도</span>`;
+      }
+      const dow = r.dateObj.getDay(), isToday = sameDay(r.dateObj, today);
+      const lines = ORDER.filter(g => byG[g]).map(g => g === '메인요리'
+        ? `<div class="cdy-main">${byG[g].map(escapeHtml).join(' · ')}</div>`
+        : `<div class="cdy-row"><b>${LABEL[g]}</b>${byG[g].map(escapeHtml).join(' · ')}</div>`).join('');
+      return `<div class="cal-day ${isToday ? 'today' : ''} ${r.dateObj < today ? 'past' : ''}" data-date="${toInputDate(r.dateObj)}">
+        <div class="cdy-head"><span class="${dow === 0 || dow === 6 ? 'we' : ''}">${calMD(r.dateObj)}</span>${isToday ? '<span class="cdy-tag">오늘</span>' : ''}${rep}</div>
+        ${lines}
+      </div>`;
+    }).join('');
+    wrap.innerHTML = h || '<p style="color:var(--muted); padding:20px 0; text-align:center;">이 식단표엔 아직 메뉴가 없습니다.</p>';
+    const pastBtn = document.getElementById('calListPastBtn');
+    if(pastBtn) pastBtn.addEventListener('click', () => { calListShowPast = !calListShowPast; drawCalList(sheetIdx); });
+    wrap.querySelectorAll('.cal-day').forEach(el => el.addEventListener('click', () => {
+      const [y,m,d] = el.dataset.date.split('-').map(Number);
+      openDayEditor(sheetIdx, new Date(y, m-1, d));
+    }));
+  }
+
   function drawCalendarGrid(sheetIdx){
     const sheet = DATA.calendarSheets[sheetIdx];
     if(!sheet) return;
@@ -3638,6 +3905,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           ${soupItem?`<div class="cd-item"><span class="cd-dot" style="background:${groupColor(soupItem.group)}"></span>${escapeHtml(String(soupItem.value))}</div>`:''}
           ${(sideN||saladItem)?`<div class="cd-sub">${sideN?`반찬 ${sideN}`:''}${sideN&&saladItem?' · ':''}${saladItem?escapeHtml(String(saladItem.value)):''}</div>`:''}
         </div>
+        <div class="cd-mini">${mainItem ? escapeHtml(String(mainItem.value)) : ''}</div>
       </div>`;
     }
     els.calGrid.innerHTML = html;
@@ -4836,7 +5104,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if(!els.purchaseDetailTable) return;
     const q = (els.purchaseDetailSearch && els.purchaseDetailSearch.value.trim().toLowerCase()) || '';
     const rows = (FIN.detailRows || []).filter(r => !q || r.rawItem.toLowerCase().includes(q) || r.norm.toLowerCase().includes(q) || String(r.vendor||'').toLowerCase().includes(q));
-    const headers = ['일자','품목명','분류','구입처','단가','수량','총액','전회 대비'];
+    const headers = ['일자','품목명','분류','구입처','단가','수량','총액','전회 대비',''];
     let html = '<thead><tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach(r=>{
       const dateStr = r.date ? (r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0')+'-'+String(r.date.getDate()).padStart(2,'0')) : '-';
@@ -4852,6 +5120,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       html += `<tr>
         <td>${dateStr}</td><td><strong>${escapeHtml(r.rawItem)}</strong></td><td>${escapeHtml(r.category)}</td><td class="pd-vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 거래처로 검색" style="cursor:pointer; text-decoration:underline dotted;">${escapeHtml(r.vendor)}</td>
         <td>${fmtWon(r.price)}원</td><td>${fmtWon(r.qty)}</td><td>${fmtWon(r.amount)}원</td><td>${changeHtml}</td>
+        <td>${r.id ? `<button type="button" class="pd-edit" data-id="${escapeAttrVal(r.id)}" style="margin-left:0;">수정</button>` : ''}</td>
       </tr>`;
     });
     html += '</tbody>';
@@ -4864,6 +5133,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     });
   }
   if(els.purchaseDetailSearch) els.purchaseDetailSearch.addEventListener('input', renderPurchaseDetailTable);
+  // [수정]을 누르면 그날 매입 창을 열고 그 내역을 서식에 채운다
+  if(els.purchaseDetailTable) els.purchaseDetailTable.addEventListener('click', e => {
+    const b = e.target.closest('.pd-edit'); if(!b) return;
+    const r = (FIN.detailRows||[]).find(x => x.id === b.dataset.id);
+    if(r) openPurchaseDayModal(r.date, r.id);
+  });
 
   /* ---------------- 매입 거래처(공급처) 관리 ---------------- */
   // 도시락·케이터링 탭의 "거래처"(vendorLog)는 납품 나가는 고객사고, 이건 반대로
@@ -5036,6 +5311,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   let purchaseCalYear, purchaseCalMonth;
   const purchaseDkey = dt => dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate();
 
+  // 휴대폰 달력 칸처럼 좁은 곳에 쓰는 짧은 금액(예: 45,600 → 4.6만, 123,456 → 12만)
+  function fmtShortWon(n){
+    n = Math.round(n||0);
+    if(Math.abs(n) < 10000) return fmtWon(n);
+    const m = n / 10000;
+    return (Math.abs(m) < 10 ? m.toFixed(1).replace(/\.0$/, '') : String(Math.round(m))) + '만';
+  }
+
   function renderPurchaseCalendar(){
     if(!els.purchaseCalGrid) return;
     if(purchaseCalYear === undefined){
@@ -5070,6 +5353,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="cd-item cd-main-item">${fmtWon(total)}원</div>
           <div class="cd-item" style="color:var(--muted);">${recs.length}건</div>
         </div>
+        <div class="cd-mini">${fmtShortWon(total)}</div>
       </div>`;
     }
     els.purchaseCalGrid.innerHTML = html;
@@ -5084,7 +5368,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   // 날짜를 누르면 그날 매입 목록과, 영수증이 없는 매입을 바로 적는 서식이 함께 열린다.
   // 저장 형식은 영수증 붙여넣기와 똑같아서(purchaseLog) 매입 분석·그래프·상세내역에 그대로 합쳐진다.
-  function openPurchaseDayModal(dateObj){
+  function openPurchaseDayModal(dateObj, initialEditId){
     const dateStr = dateObj.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
     const dayRecs = () => (FIN.detailRows||[]).filter(r => r.date && purchaseDkey(r.date) === purchaseDkey(dateObj)).sort((a,b)=> b.amount - a.amount);
     const vendorNames = [...new Set([...(DATA.purchaseVendors||[]).map(v=>v.name), ...Array.from(FIN.vendorSet||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
@@ -5097,7 +5381,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="modal-cat" id="pdSummary"></div>
       <div id="pdList"></div>
       <div class="pd-form">
-        <h4>➕ 영수증 없는 매입 기입</h4>
+        <h4 id="pd_formTitle">➕ 영수증 없는 매입 기입</h4>
         <div class="pd-grid">
           <label class="pd-f">일자<input type="date" id="pd_date" class="day-edit-input" value="${toInputDate(dateObj)}"></label>
           <label class="pd-f">구입처<input type="text" id="pd_vendor" class="day-edit-input" list="pdVendors" placeholder="거래처 선택 또는 입력"></label>
@@ -5115,6 +5399,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
       <div class="modal-form-actions" style="align-items:center;">
         <div class="save-status" id="pdStatus" style="margin-right:auto;"></div>
+        <button class="load-btn secondary" id="pdCancelEditBtn" type="button" hidden>수정 취소</button>
         <button class="load-btn secondary" id="pdCloseBtn" type="button">닫기</button>
         <button class="submit-btn confirm" id="pdSaveBtn" type="button">저장 후 이어서 입력</button>
       </div>`;
@@ -5123,6 +5408,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const $ = id => document.getElementById(id);
     const statusEl = $('pdStatus');
     const anchorEl = $('pd_date');
+    let editId = null; // 수정 중인 매입 문서ID (없으면 새로 기입)
     function renderList(){
       if(!anchorEl.isConnected) return; // 그 사이 창이 닫히거나 다른 날짜 창으로 바뀌었으면 그리지 않는다
       const recs = dayRecs(), total = recs.reduce((s,r)=>s+r.amount,0);
@@ -5134,17 +5420,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
             <span style="font-weight:800; color:var(--gold-2); white-space:nowrap;">${fmtWon(r.amount)}원</span>
           </div>
           <div class="mf-value">${escapeHtml(r.category)} · ${escapeHtml(r.vendor)} · 단가 ${fmtWon(r.price)}원 × ${fmtWon(r.qty)}
-            ${r.id ? `<button type="button" class="pd-del" data-id="${escapeAttrVal(r.id)}" title="이 매입 내역 삭제">삭제</button>` : ''}</div>
+            ${r.id ? `<button type="button" class="pd-edit" data-id="${escapeAttrVal(r.id)}" title="이 매입 내역 수정">수정</button><button type="button" class="pd-del" data-id="${escapeAttrVal(r.id)}" title="이 매입 내역 삭제">삭제</button>` : ''}</div>
         </div>`).join('');
       $('pdList').querySelectorAll('.pd-del').forEach(b => b.addEventListener('click', async () => {
         if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
         if(!confirm('이 매입 내역을 삭제할까요? 되돌릴 수 없습니다.')) return;
         try{
           await window.SumokFB.deleteDoc(window.SumokFB.doc(window.SumokFB.db, 'purchaseLog', b.dataset.id));
+          if(editId === b.dataset.id) endEdit();
           statusEl.textContent = '✓ 삭제했습니다.'; statusEl.style.color = 'var(--good)';
           setTimeout(renderList, 500);
         }catch(err){ statusEl.textContent = '✗ 삭제 실패: ' + (err.message || err.code || ''); statusEl.style.color = 'var(--stamp)'; }
       }));
+      $('pdList').querySelectorAll('.pd-edit').forEach(b => b.addEventListener('click', () => startEdit(b.dataset.id)));
     }
     renderList();
 
@@ -5169,6 +5457,37 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     });
 
     let dupConfirmed = false;
+    // 수정: 목록의 [수정]을 누르면 그 내역을 아래 서식에 채우고, 저장하면 새로 만들지 않고 그 문서를 고친다
+    const addModeText = { title: $('pd_formTitle').textContent, save: $('pdSaveBtn').textContent };
+    function startEdit(id){
+      const r = (FIN.detailRows||[]).find(x => x.id === id);
+      if(!r) return;
+      editId = id; dupConfirmed = false;
+      $('pd_date').value = toInputDate(r.date);
+      $('pd_vendor').value = r.vendor || '';
+      $('pd_category').value = r.category || '';
+      $('pd_tax').value = r.tax === '면세' ? '면세' : '과세';
+      $('pd_item').value = r.rawItem || '';
+      $('pd_price').value = r.price; $('pd_qty').value = r.qty; $('pd_total').value = r.amount;
+      totalDirty = Math.round(r.price * r.qty) !== Math.round(r.amount);
+      $('pd_totalHint').textContent = totalDirty ? '직접 입력' : '단가×수량 자동';
+      $('pd_memo').value = r.memo && r.memo !== '-' ? r.memo : '';
+      $('pd_formTitle').textContent = '✏️ 매입 내역 수정';
+      $('pdSaveBtn').textContent = '수정 저장';
+      $('pdCancelEditBtn').hidden = false;
+      statusEl.textContent = '';
+      $('pd_formTitle').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    function endEdit(){
+      editId = null;
+      $('pd_formTitle').textContent = addModeText.title;
+      $('pdSaveBtn').textContent = addModeText.save;
+      $('pdCancelEditBtn').hidden = true;
+      $('pd_date').value = toInputDate(dateObj);
+      $('pd_item').value = ''; $('pd_price').value = ''; $('pd_qty').value = '1'; $('pd_total').value = ''; $('pd_memo').value = '영수증 없음';
+      totalDirty = false; $('pd_totalHint').textContent = '단가×수량 자동';
+    }
+    $('pdCancelEditBtn').addEventListener('click', () => { endEdit(); statusEl.textContent = ''; });
     $('pdCloseBtn').addEventListener('click', () => els.recipeModal.classList.remove('active'));
     $('pdSaveBtn').addEventListener('click', async () => {
       if(!window.SumokFB || !window.SumokFB.auth.currentUser){ toast('로그인 후 이용해 주세요.', true); return; }
@@ -5182,7 +5501,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const [y,m,d] = dv.split('-').map(Number);
       const date = new Date(y, m-1, d);
       // 같은 날·구입처·품목·금액이 이미 있으면 한 번 더 확인한다
-      if(!dupConfirmed && findDuplicatePurchase({date, item, vendor, total})){
+      if(!editId && !dupConfirmed && findDuplicatePurchase({date, item, vendor, total})){
         dupConfirmed = true;
         statusEl.textContent = '⚠ 같은 내역이 이미 있습니다. 그래도 저장하려면 한 번 더 눌러 주세요.'; statusEl.style.color = 'var(--stamp)';
         return;
@@ -5191,22 +5510,30 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const btn = $('pdSaveBtn'); btn.disabled = true;
       statusEl.textContent = '저장 중...'; statusEl.style.color = 'var(--muted)';
       try{
-        const { db, collection, addDoc, Timestamp } = window.SumokFB;
-        await addDoc(collection(db, 'purchaseLog'), {
+        const { db, collection, doc, addDoc, updateDoc, Timestamp } = window.SumokFB;
+        const rec = {
           date: Timestamp.fromDate(date), category, item, vendor,
           tax: $('pd_tax').value, price, qty, total, memo: $('pd_memo').value.trim() || '-',
-        });
-        statusEl.textContent = `✓ 저장했습니다: ${item} ${fmtWon(total)}원`; statusEl.style.color = 'var(--good)';
+        };
+        if(editId){
+          await updateDoc(doc(db, 'purchaseLog', editId), rec);
+          statusEl.textContent = `✓ 수정했습니다: ${item} ${fmtWon(total)}원`; statusEl.style.color = 'var(--good)';
+          endEdit();
+        }else{
+          await addDoc(collection(db, 'purchaseLog'), rec);
+          statusEl.textContent = `✓ 저장했습니다: ${item} ${fmtWon(total)}원`; statusEl.style.color = 'var(--good)';
+          // 이어서 입력: 일자·구입처·분류·과세구분·메모는 남기고 품목·금액만 비운다
+          $('pd_item').value = ''; $('pd_price').value = ''; $('pd_qty').value = '1'; $('pd_total').value = ''; totalDirty = false; $('pd_totalHint').textContent = '단가×수량 자동';
+          $('pd_item').focus();
+        }
         refreshCostCalcIngredientList();
-        // 이어서 입력: 일자·구입처·분류·과세구분·메모는 남기고 품목·금액만 비운다
-        $('pd_item').value = ''; $('pd_price').value = ''; $('pd_qty').value = '1'; $('pd_total').value = ''; totalDirty = false; $('pd_totalHint').textContent = '단가×수량 자동';
-        $('pd_item').focus();
         setTimeout(renderList, 600); setTimeout(renderList, 1800); // 클라우드에서 새 목록이 돌아오는 시간 차이 대비
       }catch(err){
         statusEl.textContent = '✗ 저장 실패: ' + (err.message || err.code || ''); statusEl.style.color = 'var(--stamp)';
       }
       btn.disabled = false;
     });
+    if(initialEditId) startEdit(initialEditId);
   }
 
   if(els.purchaseCalPrevBtn) els.purchaseCalPrevBtn.addEventListener('click', ()=>{
@@ -5221,6 +5548,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const now = new Date(); purchaseCalYear = now.getFullYear(); purchaseCalMonth = now.getMonth();
     renderPurchaseCalendar();
   });
+  const purchaseTodayAddBtn = document.getElementById('purchaseTodayAddBtn');
+  if(purchaseTodayAddBtn) purchaseTodayAddBtn.addEventListener('click', () => openPurchaseDayModal(new Date()));
 
   const SALES_SUM_FIELDS = ['storeGood','storeCard','storeCash','deliverCard','deliverTransfer',
     'lunchboxCard','lunchboxTransfer','cateringCard','cateringTransfer','total'];
@@ -5578,12 +5907,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       // 파일을 아직 안 열었으면, 엑셀 없이도 바로 쓸 수 있는 공과금 탭을 기본으로 보여준다.
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-      const utilBtn = document.querySelector('.tab-btn[data-tab="tab-utility"]');
-      const utilPanel = document.getElementById('tab-utility');
-      if(utilBtn) utilBtn.classList.add('active');
-      if(utilPanel) utilPanel.classList.add('active');
+      // 휴대폰에서는 직원들이 가장 자주 쓰는 매출 입력을 첫 화면으로 연다
+      const startTab = window.innerWidth <= 620 ? 'tab-entry' : 'tab-utility';
+      const startBtn = document.querySelector(`.tab-btn[data-tab="${startTab}"]`);
+      const startPanel = document.getElementById(startTab);
+      if(startBtn) startBtn.classList.add('active');
+      if(startPanel) startPanel.classList.add('active');
+      syncMobileNav(startTab);
       if(els.utilityDate && !els.utilityDate.value) els.utilityDate.value = todayStr();
-      toast('로그인되었습니다. 공과금·매출·급여·매입 입력은 바로 이용 가능하고, 다른 기능은 엑셀 파일을 열어야 합니다.');
+      toast('로그인되었습니다.');
     }
     const { collection, db, onSnapshot, query, orderBy, doc } = window.SumokFB;
     const q = query(collection(db, 'utilityLog'), orderBy('date', 'desc'));
@@ -5624,6 +5956,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       FIN.salesByMonth = salesByMonth;
       FIN.salesDetailRows = salesDetailRows;
       renderSalesDetailTable();
+      // 날짜를 아직 안 골랐으면 오늘로 — 매출 자료가 도착한 뒤라 그날 저장된 값이 있으면 같이 불러온다
+      if(els.s_date && !els.s_date.value) els.s_date.value = todayStr();
       loadSalesEntryForDate();
       renderFinancialDashboard();
     }, (err)=>{
@@ -5659,6 +5993,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           date: v.date && v.date.toDate ? v.date.toDate() : new Date(v.date),
           category: v.category || '미분류', rawItem: v.item || '', vendor: v.vendor || '미상',
           price: Number(v.price)||0, qty: Number(v.qty)||0, amount: Number(v.total)||0,
+          tax: v.tax || '', memo: v.memo || '',
         };
       });
       const agg = computePurchaseAggregates(rows);
@@ -6278,7 +6613,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     const detailRows = [];
 
     rows.forEach(r=>{
-      const {id, date, category, rawItem, vendor, price, qty, amount} = r;
+      const {id, date, category, rawItem, vendor, price, qty, amount, tax, memo} = r;
       totalPurchaseAmt += amount;
       const mk = monthKey(date), dk = dayKey(date);
       if(mk) byMonth[mk] = (byMonth[mk]||0) + amount;
@@ -6293,7 +6628,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         itemAgg[norm].qty += qty;
         if(!itemHistory[norm]) itemHistory[norm] = [];
         itemHistory[norm].push({date, price, qty, vendor, rawName: rawItem});
-        detailRows.push({id, date, category, rawItem, norm, vendor, price, qty, amount});
+        detailRows.push({id, date, category, rawItem, norm, vendor, price, qty, amount, tax, memo});
       }
     });
     const totalPurchaseCount = rows.length;
@@ -6721,6 +7056,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     computeSalesTotal();
   }
   if(els.s_date) els.s_date.addEventListener('change', loadSalesEntryForDate);
+  // 날짜 빠른 선택(오늘·어제) — 휴대폰에서 달력을 열지 않고 바로 고른다
+  document.querySelectorAll('#tab-entry [data-sday]').forEach(b => b.addEventListener('click', () => {
+    const d = new Date(); d.setDate(d.getDate() + Number(b.dataset.sday));
+    els.s_date.value = toInputDate(d);
+    loadSalesEntryForDate();
+  }));
+  // 휴대폰에서 숫자 키패드가 뜨게 하고, 칸을 누르면 기존 값(0 등)이 통째로 선택돼 바로 덮어쓰게 한다
+  S_ENTRY_FIELDS.forEach(id => {
+    if(!els[id]) return;
+    els[id].setAttribute('inputmode', 'numeric');
+    els[id].addEventListener('focus', () => els[id].select());
+  });
 
   // 매출도 이제 Firestore. 문서ID를 날짜 문자열(YYYY-MM-DD)로 고정해서 쓰면,
   // 같은 날짜에 다시 저장할 때 자동으로 그 문서를 덮어써서(=갱신) 별도의
@@ -7311,6 +7658,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           ${shown.map(r=>`<div class="cd-item"><span class="cd-dot" style="background:${cateringTypeColor(r.type)}"></span>${escapeHtml(r.vendor)}</div>`).join('')}
           ${recs.length>shown.length?`<div class="cd-item" style="color:var(--muted);">+${recs.length-shown.length}건 더</div>`:''}
         </div>
+        <div class="cd-mini"><span class="cd-dots">${recs.slice(0,4).map(r=>`<i style="background:${cateringTypeColor(r.type)}"></i>`).join('')}</span>${totalCount.toLocaleString('ko-KR')}인</div>
       </div>`;
     }
     els.cateringCalGrid.innerHTML = html;
@@ -7334,6 +7682,29 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <span class="cl-item"><span class="cl-dot" style="background:${cateringTypeColor('도시락')}"></span>도시락</span>
       <span class="cl-item"><span class="cl-dot" style="background:${cateringTypeColor('케이터링')}"></span>케이터링</span>
     `;
+    renderCateringAgenda(byDate);
+  }
+
+  // 휴대폰: 달력 칸이 좁아 업체명이 안 보이므로, 그 달 예약을 날짜순 목록으로 달력 아래에 함께 보여준다
+  function renderCateringAgenda(byDate){
+    const wrap = document.getElementById('cateringCalList');
+    if(!wrap) return;
+    const daysInMonth = new Date(cateringCalYear, cateringCalMonth+1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+    let html = '';
+    for(let d=1; d<=daysInMonth; d++){
+      const dt = new Date(cateringCalYear, cateringCalMonth, d);
+      const recs = (byDate[cateringDkey(dt)] || []).slice().sort((a,b)=> b.total - a.total);
+      if(!recs.length) continue;
+      const cnt = recs.reduce((s,r)=>s+r.count,0);
+      const cls = sameDay(dt, today) ? 'today' : (dt < today ? 'past' : '');
+      html += `<div class="cag-day ${cls}" data-date="${d}">
+        <div class="cag-date">${dt.getMonth()+1}/${d}(${'일월화수목금토'[dt.getDay()]})${cls === 'today' ? '<span class="cag-today">오늘</span>' : ''}<span class="cag-sum">${recs.length}건 · ${cnt.toLocaleString('ko-KR')}인</span></div>
+        ${recs.map(r => `<div class="cag-rec"><span class="cat-pill" style="background:${cateringTypeColor(r.type)}22; color:${cateringTypeColor(r.type)};">${escapeHtml(r.type)}</span> <b>${escapeHtml(r.vendor)}</b> · ${r.count.toLocaleString('ko-KR')}인${r.menu && r.menu !== '-' ? `<div class="cag-menu">${escapeHtml(r.menu)}</div>` : ''}</div>`).join('')}
+      </div>`;
+    }
+    wrap.innerHTML = `<div class="cag-title">${cateringCalMonth+1}월 예약 목록</div>` + (html || '<p class="cag-empty">이 달엔 예약이 없습니다. 달력에서 날짜를 눌러 예약을 추가하세요.</p>');
+    wrap.querySelectorAll('.cag-day').forEach(el => el.addEventListener('click', () => openCateringDayModal(new Date(cateringCalYear, cateringCalMonth, +el.dataset.date))));
   }
 
   function updateCateringCalSelectBar(){
@@ -8915,6 +9286,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       navigator.serviceWorker.register('sw.js').catch(function(err){ console.warn('앱 설치 기능 준비 실패:', err); });
     });
   }
+  // 인터넷 연결 상태 — 끊기면 화면 위에 안내 띠를 띄운다(입력은 기기에 보관됐다가 연결되면 자동 저장)
+  function syncOnline(){ document.body.classList.toggle('is-offline', !navigator.onLine); }
+  window.addEventListener('online', syncOnline);
+  window.addEventListener('offline', syncOnline);
+  syncOnline();
+
   var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (standalone || !isWebServer) return; // 이미 앱으로 실행 중이거나 PC 파일로 연 경우엔 설치 버튼 없음
 
