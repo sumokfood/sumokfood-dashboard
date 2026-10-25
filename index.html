@@ -818,11 +818,12 @@
     .mnav button{flex:1; min-width:0; background:none; border:none; color:#AFC0B3; font:inherit; font-size:11px; font-weight:700; display:flex; flex-direction:column; align-items:center; gap:1px; padding:5px 0 4px; border-radius:8px; cursor:pointer;}
     .mnav button .mi{font-size:20px; line-height:1.15;}
     .mnav button.on{color:var(--gold-soft); background:rgba(255,255,255,0.09);}
-    .back-to-top{bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
+    .back-to-top, .back-to-top.visible{display:none !important;} /* 하단 메뉴가 있으니 입력칸을 가리는 '맨 위로' 버튼은 숨긴다 */
     #toastWrap{left:12px; right:12px; bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
     .toast{max-width:none;}
     .install-help{bottom:calc(84px + env(safe-area-inset-bottom, 0px));}
     .section-title .sub{margin-left:0; flex-basis:100%; font-size:11px;}
+    button.load-btn{white-space:normal; max-width:100%;} /* 긴 버튼 글자는 줄바꿈 — 한 줄 고정이면 글자 큰 휴대폰에서 화면 밖으로 나간다 */
     /* 입력칸 글씨는 16px 이상 — 아이폰은 이보다 작으면 입력할 때마다 화면을 확대해 버린다 */
     input, select, textarea{font-size:16px !important;}
     /* 창(모달)은 화면 전체를 쓰고, 저장·닫기 버튼은 항상 화면 아래에 붙어 있게 */
@@ -837,14 +838,17 @@
     .pd-del, .pd-edit{padding:6px 12px; font-size:13px;}
     /* 매출 입력: 항목마다 한 줄, 큰 칸 */
     .entry-card{padding:16px 14px 18px;}
-    .se-date-row .form-field{flex:1; max-width:none !important;}
+    .se-date-row .form-field{flex:1 1 150px; min-width:0; max-width:none !important;}
     .se-date-row .load-btn{padding:12px 14px;}
-    .se-row{flex-direction:column; align-items:stretch; gap:8px;}
+    /* 줄바꿈(wrap)을 켠 세로 배치는 칸의 기본 폭만큼 줄이 넓어져서, 휴대폰 글자를 크게 해 둔 경우
+       금액 칸이 화면 밖으로 밀려났다 → 줄바꿈을 끄고, 입력칸의 기본 폭을 0으로 두고 남는 폭만 채우게 한다 */
+    .se-row{flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:8px;}
     .se-cat{font-size:13px;}
-    .se-field label{min-width:60px; font-size:13px;}
-    .se-field input{padding:11px 12px; text-align:right;}
-    .form-field input, .form-field select{padding:11px 12px;}
-    .form-grid{grid-template-columns:1fr;}
+    .se-field{width:100%; min-width:0;}
+    .se-field label{flex:0 0 4.6em; font-size:13px;}
+    .se-field input{width:0; min-width:0; flex:1 1 auto; padding:11px 12px; text-align:right;}
+    .form-field input, .form-field select{min-width:0; max-width:100%; padding:11px 12px;}
+    .form-grid{grid-template-columns:minmax(0,1fr);} /* 1fr만 쓰면 칸 기본 폭이 줄을 넓혀 글자 큰 휴대폰에서 화면 밖으로 밀린다 */
     .form-actions{flex-wrap:wrap;}
     .form-actions .save-status{flex-basis:100%;}
     .form-actions .submit-btn{flex:1; padding:14px; font-size:16px;}
