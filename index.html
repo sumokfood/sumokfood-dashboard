@@ -864,6 +864,22 @@
     .pd-today-btn{width:100%; padding:13px; font-size:15px; margin-bottom:10px;}
   }
 
+  /* 납품 기록 목록: 칸이 좁아 메뉴 글자가 한 자씩 세로로 쌓이던 문제 — 메뉴 칸은 최소 폭을 주고 나머지 칸은 한 줄로, 넘치면 옆으로 스크롤 */
+  .cat-log td{white-space:nowrap;}
+  .cat-log td.cl-menu{white-space:normal; min-width:240px; max-width:420px; word-break:keep-all; overflow-wrap:anywhere;}
+  @media (max-width: 620px){
+    /* 휴대폰: 표 대신 기록 1건 = 카드 1장 */
+    .cat-log thead{display:none;}
+    .cat-log, .cat-log tbody, .cat-log tr, .cat-log td{display:block; width:auto;}
+    .cat-log tr{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:6px; padding:8px 12px; margin-bottom:8px;}
+    .cat-log tr:nth-child(even) td{background:transparent;}
+    .cat-log td{border:none; padding:3px 0; white-space:normal; display:flex; gap:10px; font-size:13px; min-width:0;}
+    .cat-log td::before{content:attr(data-label); flex:0 0 4.6em; color:var(--muted); font-weight:700; font-size:12px;}
+    .cat-log td.cl-menu{min-width:0; max-width:none;}
+    .cat-log td.cl-act{justify-content:flex-end;}
+    .cat-log td.cl-act::before{content:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -7585,13 +7601,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       els.cateringTableWrap.innerHTML = '<p style="color:var(--muted); font-size:13px; padding:10px 0;">검색 결과가 없습니다.</p>';
       return;
     }
-    let html = '<table class="change-log-table"><thead><tr><th>날짜</th><th>구분</th><th>업체명</th><th>담당자</th><th>연락처</th><th>인원수</th><th>납품 메뉴</th><th>단가</th><th>총액</th><th>비고</th><th></th></tr></thead><tbody>';
+    let html = '<table class="change-log-table cat-log"><thead><tr><th>날짜</th><th>구분</th><th>업체명</th><th>담당자</th><th>연락처</th><th>인원수</th><th>납품 메뉴</th><th>단가</th><th>총액</th><th>비고</th><th></th></tr></thead><tbody>';
     sorted.forEach(r=>{
       const dateStr = r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0')+'-'+String(r.date.getDate()).padStart(2,'0');
       html += `<tr class="row-link" data-rownum="${r.rowNum}">
-        <td>${dateStr}</td><td>${escapeHtml(r.type)}</td><td><span class="vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 업체로 검색">${escapeHtml(r.vendor)}</span></td><td>${escapeHtml(r.contact)}</td><td>${escapeHtml(r.phone)}</td><td>${r.count.toLocaleString('ko-KR')}명</td>
-        <td>${escapeHtml(r.menu)}</td><td>${r.unitPrice.toLocaleString('ko-KR')}원</td><td>${r.total.toLocaleString('ko-KR')}원</td><td>${escapeHtml(r.note)}</td>
-        <td><button class="inv-del-btn" data-rownum="${r.rowNum}">삭제</button></td>
+        <td data-label="날짜">${dateStr}</td><td data-label="구분">${escapeHtml(r.type)}</td><td data-label="업체명"><span class="vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 업체로 검색">${escapeHtml(r.vendor)}</span></td><td data-label="담당자">${escapeHtml(r.contact)}</td><td data-label="연락처">${escapeHtml(r.phone)}</td><td data-label="인원수">${r.count.toLocaleString('ko-KR')}명</td>
+        <td data-label="납품 메뉴" class="cl-menu">${escapeHtml(r.menu)}</td><td data-label="단가">${r.unitPrice.toLocaleString('ko-KR')}원</td><td data-label="총액">${r.total.toLocaleString('ko-KR')}원</td><td data-label="비고">${escapeHtml(r.note)}</td>
+        <td class="cl-act"><button class="inv-del-btn" data-rownum="${r.rowNum}">삭제</button></td>
       </tr>`;
     });
     html += '</tbody>';
