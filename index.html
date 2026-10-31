@@ -864,20 +864,32 @@
     .pd-today-btn{width:100%; padding:13px; font-size:15px; margin-bottom:10px;}
   }
 
-  /* 납품 기록 목록: 칸이 좁아 메뉴 글자가 한 자씩 세로로 쌓이던 문제 — 메뉴 칸은 최소 폭을 주고 나머지 칸은 한 줄로, 넘치면 옆으로 스크롤 */
+  /* 납품 기록 목록: 납품 메뉴는 저장된 쉼표 문자열을 화면에서만 쪼개 항목별 칩으로 보여준다(저장 형식은 그대로) */
   .cat-log td{white-space:nowrap;}
-  .cat-log td.cl-menu{white-space:normal; min-width:240px; max-width:420px; word-break:keep-all; overflow-wrap:anywhere;}
+  .cat-log td.cl-menu{white-space:normal; min-width:260px; max-width:460px;}
+  .menu-chip{display:inline-block; margin:2px 4px 2px 0; padding:2px 9px; border-radius:999px; font-size:12px; line-height:1.5; border:1px solid transparent; color:var(--text); max-width:100%; overflow-wrap:anywhere;}
+  .menu-chip.rice{background:#F3EFE2; border-color:#D9CFB0;}
+  .menu-chip.soup{background:#E3EDF1; border-color:#B9D1DA;}
+  .menu-chip.kim{background:#F6E0DA; border-color:#E3B8AD;}
+  .menu-chip.dish{background:#E9F0E4; border-color:#C5D8BB;}
+  .menu-chip-count{font-size:11px; color:var(--muted); margin-top:2px;}
+  .cat-cards{display:none;}
+  .cat-card{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:8px; padding:9px 11px; margin-bottom:8px; cursor:pointer;}
+  .cat-card-top{display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; font-size:13.5px; color:var(--ink);}
+  .cat-card-top .cat-tag{font-size:11.5px; background:#EFE7D3; border-radius:999px; padding:1px 8px;}
+  .cat-card-top .cat-cnt{margin-left:auto; font-size:12.5px; color:var(--muted);}
+  .cat-card-chips{margin-top:5px;}
+  .cat-card-foot{display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:4px; font-size:13px; color:var(--ink-2); font-weight:700;}
   @media (max-width: 620px){
-    /* 휴대폰: 표 대신 기록 1건 = 카드 1장 */
-    .cat-log thead{display:none;}
-    .cat-log, .cat-log tbody, .cat-log tr, .cat-log td{display:block; width:auto;}
-    .cat-log tr{background:var(--paper-2); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:6px; padding:8px 12px; margin-bottom:8px;}
-    .cat-log tr:nth-child(even) td{background:transparent;}
-    .cat-log td{border:none; padding:3px 0; white-space:normal; display:flex; gap:10px; font-size:13px; min-width:0;}
-    .cat-log td::before{content:attr(data-label); flex:0 0 4.6em; color:var(--muted); font-weight:700; font-size:12px;}
-    .cat-log td.cl-menu{min-width:0; max-width:none;}
-    .cat-log td.cl-act{justify-content:flex-end;}
-    .cat-log td.cl-act::before{content:none;}
+    /* 휴대폰: 표 대신 기록 1건 = 카드 1장(날짜·업체·구분·인원 / 칩 / 총액) */
+    .cat-log{display:none;}
+    .cat-cards{display:block;}
+    /* 최소 폭 320px짜리 상자들(예약 선택·인쇄/청구서 패널)이 320px 휴대폰에서 화면을 넘기던 것 */
+    #resIngResSelect{min-width:0 !important; width:100%;}
+    .print-panel{min-width:0 !important;}
+    .print-panel .pf-row > *, .print-panel select, .print-panel input{min-width:0; max-width:100%;}
+    .print-preview-actions{flex-wrap:wrap;}
+    .print-panel .pf-row input[type=text]{min-width:0;}
   }
 
 </style>
@@ -7584,6 +7596,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if(toggleBtn) toggleBtn.addEventListener('click', ()=>{ resIngSummaryShowAll = !resIngSummaryShowAll; renderResIngSummary(); });
   }
 
+  // 납품 메뉴(쉼표 문자열)를 화면에서만 항목별 칩으로 — 밥(베이지)·국/탕/찌개(하늘)·김치(분홍)·나머지(초록)
+  function menuChipKind(item){
+    if(/(국|탕|찌개|개장|곰탕)$/.test(item)) return 'soup';
+    if(/(김치|깍두기|겉절이)$/.test(item)) return 'kim';
+    if(/밥$/.test(item) && !/(볶음밥|비빔밥|덮밥|김밥|주먹밥|초밥|쌈밥)$/.test(item)) return 'rice';
+    return 'dish';
+  }
+  function menuChipsHtml(menu){
+    const items = String(menu||'').split(/[,，、]/).map(s => s.trim()).filter(s => s && s !== '-');
+    if(!items.length) return '<span style="color:var(--muted);">-</span>';
+    return items.map(it => `<span class="menu-chip ${menuChipKind(it)}">${escapeHtml(it)}</span>`).join('') + `<div class="menu-chip-count">${items.length}개 항목</div>`;
+  }
+
   function drawCateringTable(){
     const q = (els.cateringHistorySearch && els.cateringHistorySearch.value.trim().toLowerCase()) || '';
     const all = [...DATA.cateringLog].sort((a,b)=> b.date - a.date);
@@ -7606,14 +7631,22 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       const dateStr = r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0')+'-'+String(r.date.getDate()).padStart(2,'0');
       html += `<tr class="row-link" data-rownum="${r.rowNum}">
         <td data-label="날짜">${dateStr}</td><td data-label="구분">${escapeHtml(r.type)}</td><td data-label="업체명"><span class="vendor-link" data-vendor="${escapeAttrVal(r.vendor)}" title="클릭하면 이 업체로 검색">${escapeHtml(r.vendor)}</span></td><td data-label="담당자">${escapeHtml(r.contact)}</td><td data-label="연락처">${escapeHtml(r.phone)}</td><td data-label="인원수">${r.count.toLocaleString('ko-KR')}명</td>
-        <td data-label="납품 메뉴" class="cl-menu">${escapeHtml(r.menu)}</td><td data-label="단가">${r.unitPrice.toLocaleString('ko-KR')}원</td><td data-label="총액">${r.total.toLocaleString('ko-KR')}원</td><td data-label="비고">${escapeHtml(r.note)}</td>
+        <td data-label="납품 메뉴" class="cl-menu">${menuChipsHtml(r.menu)}</td><td data-label="단가">${r.unitPrice.toLocaleString('ko-KR')}원</td><td data-label="총액">${r.total.toLocaleString('ko-KR')}원</td><td data-label="비고">${escapeHtml(r.note)}</td>
         <td class="cl-act"><button class="inv-del-btn" data-rownum="${r.rowNum}">삭제</button></td>
       </tr>`;
     });
-    html += '</tbody>';
+    html += '</tbody></table><div class="cat-cards">';
+    sorted.forEach(r=>{
+      html += `<div class="cat-card row-link" data-rownum="${r.rowNum}">
+        <div class="cat-card-top"><b>${r.date.getMonth()+1}/${r.date.getDate()}(${'일월화수목금토'[r.date.getDay()]})</b> · <span class="vendor-link" data-vendor="${escapeAttrVal(r.vendor)}">${escapeHtml(r.vendor)}</span><span class="cat-tag">${escapeHtml(r.type)}</span><span class="cat-cnt">${r.count.toLocaleString('ko-KR')}명</span></div>
+        <div class="cat-card-chips">${menuChipsHtml(r.menu)}</div>
+        <div class="cat-card-foot">${r.total.toLocaleString('ko-KR')}원<button class="inv-del-btn" data-rownum="${r.rowNum}">삭제</button></div>
+      </div>`;
+    });
+    html += '</div>';
     els.cateringTableWrap.innerHTML = html;
 
-    els.cateringTableWrap.querySelectorAll('tr.row-link').forEach(tr=>{
+    els.cateringTableWrap.querySelectorAll('.row-link').forEach(tr=>{
       tr.addEventListener('click', (e)=>{
         if(e.target.closest('.inv-del-btn') || e.target.closest('.vendor-link')) return;
         const rec = DATA.cateringLog.find(x=>String(x.rowNum) === tr.dataset.rownum);
